@@ -17,6 +17,9 @@
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
+    <!-- QR Code Library -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    
     <!-- Manifest for PWA -->
     <link rel="manifest" href="manifest.json">
     
@@ -26,159 +29,293 @@
             box-sizing: border-box;
         }
         
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 12px;
+        /* Theme Variables */
+        :root {
+            --bg-gradient-start: #667eea;
+            --bg-gradient-end: #764ba2;
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --card-bg: #ffffff;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
         }
         
-        /* Mobile First - Base styles for all devices */
-        .container-custom {
-            max-width: 100%;
-            margin: 0 auto;
+        body {
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+            min-height: 100vh;
+            padding: 12px;
+            transition: background 0.3s ease;
+        }
+        
+        /* Theme Classes */
+        body.theme-purple {
+            --bg-gradient-start: #667eea;
+            --bg-gradient-end: #764ba2;
+        }
+        
+        body.theme-blue {
+            --bg-gradient-start: #1e3a8a;
+            --bg-gradient-end: #3b82f6;
+        }
+        
+        body.theme-green {
+            --bg-gradient-start: #065f46;
+            --bg-gradient-end: #10b981;
+        }
+        
+        body.theme-orange {
+            --bg-gradient-start: #9a3412;
+            --bg-gradient-end: #f97316;
+        }
+        
+        body.theme-dark {
+            --bg-gradient-start: #1f2937;
+            --bg-gradient-end: #111827;
+            --card-bg: #374151;
+            --text-primary: #f9fafb;
+            --text-secondary: #9ca3af;
+        }
+        
+        body.theme-dark .bg-white {
+            background-color: #374151 !important;
+            color: #f9fafb !important;
+        }
+        
+        body.theme-dark .text-gray-800,
+        body.theme-dark .text-gray-700,
+        body.theme-dark .text-gray-600 {
+            color: #f9fafb !important;
+        }
+        
+        body.theme-dark .border-gray-300 {
+            border-color: #4b5563 !important;
+        }
+        
+        body.theme-dark input,
+        body.theme-dark textarea,
+        body.theme-dark select {
+            background-color: #1f2937 !important;
+            color: #f9fafb !important;
+            border-color: #4b5563 !important;
+        }
+        
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: -1000px 0; }
+            100% { background-position: 1000px 0; }
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .animate-fadeInUp {
+            animation: fadeInUp 0.5s ease forwards;
+        }
+        
+        .animate-slideInLeft {
+            animation: slideInLeft 0.5s ease forwards;
+        }
+        
+        .animate-slideInRight {
+            animation: slideInRight 0.5s ease forwards;
+        }
+        
+        .animate-pulse-slow {
+            animation: pulse 2s infinite;
+        }
+        
+        .animate-shimmer {
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            background-size: 1000px 100%;
+            animation: shimmer 2s infinite;
         }
         
         /* Card styles */
         .card-hover {
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .card-hover:active {
-            transform: scale(0.99);
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -12px rgba(0, 0, 0, 0.2);
         }
         
         /* Button styles */
         .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
             transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
         }
+        
+        .btn-primary::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .btn-primary:active::after {
+            width: 300px;
+            height: 300px;
+        }
+        
         .btn-primary:active {
             transform: scale(0.98);
         }
         
-        /* Custom scrollbar */
-        ::-webkit-scrollbar {
-            width: 4px;
-            height: 4px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #888;
-            border-radius: 10px;
-        }
-        
-        /* Print styles */
-        @media print {
-            .no-print {
-                display: none !important;
-            }
-            body {
-                background: white;
-                padding: 0;
-                margin: 0;
-            }
-        }
-        
-        /* Mobile Responsive Breakpoints */
-        /* Extra Small Devices (Phones, < 480px) */
-        @media (max-width: 480px) {
-            body {
-                padding: 8px;
-            }
-            .text-3xl {
-                font-size: 1.5rem;
-            }
-            .text-xl {
-                font-size: 1.125rem;
-            }
-            .p-4 {
-                padding: 12px;
-            }
-            button, .btn-primary, .bg-gradient-to-r {
-                padding: 10px 12px;
-                font-size: 14px;
-            }
-            input, select, textarea {
-                font-size: 16px !important; /* Prevents zoom on iOS */
-                padding: 10px !important;
-            }
-            .clock-digits {
-                font-size: 1.5rem;
-            }
-        }
-        
-        /* Small Devices (Tablets, 481px - 768px) */
-        @media (min-width: 481px) and (max-width: 768px) {
-            body {
-                padding: 12px;
-            }
-            .text-3xl {
-                font-size: 1.75rem;
-            }
-        }
-        
-        /* Medium Devices (Desktops, 769px - 1024px) */
-        @media (min-width: 769px) {
-            body {
-                padding: 20px;
-            }
-            .container-custom {
-                max-width: 1200px;
-                margin: 0 auto;
-            }
-        }
-        
-        /* Item table responsive */
-        .items-table-wrapper {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-        
-        .items-table {
-            min-width: 500px;
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            animation: fadeInUp 0.3s ease;
         }
         
-        .items-table th,
-        .items-table td {
-            padding: 10px 8px;
-            vertical-align: middle;
+        .modal.active {
+            display: flex;
         }
         
-        /* Make item name column wider on all devices */
-        .items-table th:first-child,
-        .items-table td:first-child {
-            min-width: 180px;
-            width: 45%;
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            max-width: 90%;
+            width: 400px;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: slideInLeft 0.3s ease;
         }
         
-        @media (max-width: 480px) {
-            .items-table th:first-child,
-            .items-table td:first-child {
-                min-width: 140px;
-            }
-            .items-table th,
-            .items-table td {
-                padding: 8px 4px;
-            }
+        body.theme-dark .modal-content {
+            background: #374151;
+            color: white;
         }
         
-        /* Input focus styles */
-        input:focus, textarea:focus, select:focus {
-            outline: none;
-            border-color: #667eea;
-            ring: 2px solid #667eea;
+        /* QR Modal specific */
+        .qr-modal-content {
+            text-align: center;
         }
         
-        /* Better touch targets for mobile */
-        button, 
-        [onclick],
-        .clickable {
+        #qrcode {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        /* Settings menu */
+        .settings-panel {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 85%;
+            max-width: 350px;
+            height: 100%;
+            background: white;
+            z-index: 1001;
+            transition: right 0.3s ease;
+            box-shadow: -5px 0 20px rgba(0,0,0,0.1);
+            overflow-y: auto;
+        }
+        
+        .settings-panel.open {
+            right: 0;
+        }
+        
+        body.theme-dark .settings-panel {
+            background: #1f2937;
+            color: white;
+        }
+        
+        .settings-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        
+        .settings-overlay.active {
+            display: block;
+        }
+        
+        /* Theme color options */
+        .theme-option {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
             cursor: pointer;
-            min-height: 44px;
-            min-width: 44px;
+            transition: transform 0.2s ease;
+            border: 3px solid transparent;
+        }
+        
+        .theme-option:hover {
+            transform: scale(1.1);
+        }
+        
+        .theme-option.active {
+            border-color: white;
+            box-shadow: 0 0 0 2px #667eea;
         }
         
         /* Toast notification */
@@ -192,35 +329,37 @@
             border-radius: 9999px;
             padding: 10px 20px;
             font-size: 14px;
-            z-index: 1000;
+            z-index: 2000;
             white-space: nowrap;
             box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
-            animation: slideUp 0.3s ease;
+            animation: slideInLeft 0.3s ease;
         }
         
-        @keyframes slideUp {
-            from {
-                bottom: 0;
-                opacity: 0;
+        /* Item table responsive */
+        .items-table-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .items-table {
+            min-width: 500px;
+            width: 100%;
+        }
+        
+        .items-table th:first-child,
+        .items-table td:first-child {
+            min-width: 180px;
+            width: 45%;
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 8px;
             }
-            to {
-                bottom: 20px;
-                opacity: 1;
+            .items-table th:first-child,
+            .items-table td:first-child {
+                min-width: 140px;
             }
-        }
-        
-        /* Invoice list items */
-        .invoice-item {
-            transition: background-color 0.2s ease;
-        }
-        .invoice-item:active {
-            background-color: #f3f4f6;
-        }
-        
-        /* Clock styling */
-        .digital-clock {
-            font-family: 'Courier New', monospace;
-            letter-spacing: 2px;
         }
         
         /* Loading spinner */
@@ -228,22 +367,89 @@
             animation: spin 1s linear infinite;
         }
         
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
+        /* Invoice item animations */
+        .invoice-item {
+            transition: all 0.3s ease;
+        }
+        
+        .invoice-item:hover {
+            transform: translateX(5px);
+            background-color: #f9fafb;
+        }
+        
+        body.theme-dark .invoice-item:hover {
+            background-color: #4b5563;
         }
     </style>
 </head>
 <body>
+    <!-- Settings Panel -->
+    <div class="settings-overlay" id="settingsOverlay" onclick="closeSettings()"></div>
+    <div class="settings-panel" id="settingsPanel">
+        <div class="p-4">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold">
+                    <i class="fas fa-cog"></i> 
+                    <span id="settingsTitle">Settings</span>
+                </h2>
+                <button onclick="closeSettings()" class="text-2xl">&times;</button>
+            </div>
+            
+            <!-- Theme Selection -->
+            <div class="mb-6">
+                <h3 class="font-semibold mb-2" id="themeTitle">🎨 Theme Color</h3>
+                <div class="flex gap-3 flex-wrap">
+                    <div class="theme-option bg-gradient-to-r from-purple-500 to-indigo-500" onclick="changeTheme('purple')" data-theme="purple"></div>
+                    <div class="theme-option bg-gradient-to-r from-blue-700 to-blue-500" onclick="changeTheme('blue')" data-theme="blue"></div>
+                    <div class="theme-option bg-gradient-to-r from-green-700 to-green-500" onclick="changeTheme('green')" data-theme="green"></div>
+                    <div class="theme-option bg-gradient-to-r from-orange-700 to-orange-500" onclick="changeTheme('orange')" data-theme="orange"></div>
+                    <div class="theme-option bg-gradient-to-r from-gray-800 to-gray-600" onclick="changeTheme('dark')" data-theme="dark"></div>
+                </div>
+            </div>
+            
+            <!-- Clear Data Button -->
+            <div class="mb-6">
+                <h3 class="font-semibold mb-2" id="dataTitle">🗑️ Data Management</h3>
+                <button onclick="clearAllData()" class="w-full bg-red-500 text-white px-4 py-2 rounded-xl hover:bg-red-600 transition">
+                    <i class="fas fa-trash-alt"></i> <span id="clearDataBtn">Clear All My Data</span>
+                </button>
+                <p class="text-xs text-gray-500 mt-1" id="clearWarning">Warning: This will delete all your invoices from this browser</p>
+            </div>
+            
+            <!-- About Section -->
+            <div class="border-t pt-4">
+                <h3 class="font-semibold mb-2" id="aboutTitle">ℹ️ About</h3>
+                <p class="text-sm mb-2" id="aboutText">Hosur Invoice Bill - Free invoice generator for small businesses</p>
+                <p class="text-sm">
+                    <i class="fas fa-envelope"></i> 
+                    <a href="mailto:0gbtechintel@gmail.com" class="text-blue-500 hover:underline">0gbtechintel@gmail.com</a>
+                </p>
+                <p class="text-xs text-gray-500 mt-2">Version 2.0 | Created by Shri Muhammed Zabiullah Khan</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- QR Code Modal -->
+    <div class="modal" id="qrModal">
+        <div class="modal-content qr-modal-content">
+            <div class="flex justify-between items-center mb-3">
+                <h3 class="text-lg font-bold" id="qrTitle">Scan QR Code</h3>
+                <button onclick="closeQRModal()" class="text-2xl">&times;</button>
+            </div>
+            <div id="qrcode"></div>
+            <p class="text-sm text-gray-500 mt-2" id="qrText">Scan to open Hosur Invoice Bill on your phone</p>
+            <button onclick="closeQRModal()" class="btn-primary w-full mt-3 px-4 py-2 rounded-xl text-white" id="qrCloseBtn">Close</button>
+        </div>
+    </div>
+    
     <div class="container-custom">
         
-        <!-- Modern Header with Clock - Mobile Responsive -->
-        <div class="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-3 md:p-6 mb-3 md:mb-4 no-print card-hover">
+        <!-- Modern Header with 12-Hour Clock -->
+        <div class="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-3 md:p-6 mb-3 md:mb-4 no-print card-hover animate-fadeInUp">
             <div class="flex flex-col sm:flex-row justify-between items-center gap-3">
-                <!-- Logo & Title -->
                 <div class="text-center sm:text-left">
                     <div class="flex items-center gap-2 justify-center sm:justify-start">
-                        <div class="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
+                        <div class="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center animate-pulse-slow">
                             <i class="fas fa-file-invoice text-white text-xl md:text-2xl"></i>
                         </div>
                         <div>
@@ -256,44 +462,44 @@
                     <p class="text-[9px] md:text-xs text-gray-400 mt-0.5">by Shri Muhammed Zabiullah Khan</p>
                 </div>
                 
-                <!-- Digital Clock - Mobile Friendly -->
-                <div class="bg-gradient-to-r from-gray-900 to-gray-800 rounded-xl p-2 md:p-3 px-3 md:px-6 shadow-lg">
+                <!-- Digital Clock - 12 Hour Format -->
+                <div class="bg-gradient-to-r from-gray-900 to-gray-800 rounded-xl p-2 md:p-3 px-3 md:px-6 shadow-lg animate-slideInRight">
                     <div class="text-center">
                         <div class="text-xl md:text-2xl lg:text-3xl font-mono font-bold text-white digital-clock" id="digitalClock">
-                            00:00:00
+                            12:00:00 AM
                         </div>
                         <div class="text-[9px] md:text-xs text-gray-400 mt-0.5" id="dateDisplay"></div>
                     </div>
                 </div>
                 
-                <!-- Language & Controls - Mobile Wrap -->
+                <!-- Language & Controls -->
                 <div class="flex gap-2 flex-wrap justify-center">
                     <button onclick="toggleLanguage()" id="langBtn" class="bg-gradient-to-r from-green-500 to-teal-500 text-white px-3 md:px-4 py-1.5 md:py-2 rounded-xl font-semibold shadow-md transition active:scale-95 flex items-center gap-1 md:gap-2 text-sm md:text-base">
                         <i class="fas fa-language text-xs md:text-sm"></i>
                         <span id="langBtnText">தமிழ்</span>
                     </button>
-                    <button onclick="clearAllData()" class="bg-gradient-to-r from-red-500 to-pink-500 text-white px-3 md:px-4 py-1.5 md:py-2 rounded-xl font-semibold shadow-md transition active:scale-95 flex items-center gap-1 md:gap-2 text-sm md:text-base">
-                        <i class="fas fa-trash-alt text-xs md:text-sm"></i>
-                        <span id="clearBtnText">அழிக்க</span>
+                    <button onclick="showQRCode()" class="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 md:px-4 py-1.5 md:py-2 rounded-xl font-semibold shadow-md transition active:scale-95 flex items-center gap-1 md:gap-2 text-sm md:text-base">
+                        <i class="fas fa-qrcode"></i>
+                        <span id="qrBtnText">QR Code</span>
                     </button>
-                    <button onclick="window.location.reload()" class="bg-gradient-to-r from-gray-500 to-gray-600 text-white px-3 md:px-4 py-1.5 md:py-2 rounded-xl font-semibold shadow-md transition active:scale-95 flex items-center gap-1 md:gap-2 text-sm md:text-base">
-                        <i class="fas fa-sync-alt text-xs md:text-sm"></i>
-                        <span id="refreshBtnText">புதுப்பி</span>
+                    <button onclick="openSettings()" class="bg-gradient-to-r from-gray-500 to-gray-600 text-white px-3 md:px-4 py-1.5 md:py-2 rounded-xl font-semibold shadow-md transition active:scale-95 flex items-center gap-1 md:gap-2 text-sm md:text-base">
+                        <i class="fas fa-cog"></i>
+                        <span id="settingsBtnText">Settings</span>
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- Quick Tips Banner -->
-        <div class="bg-yellow-50 border-l-4 border-yellow-400 rounded-xl p-2 md:p-3 mb-3 md:mb-4 no-print">
+        <!-- Quick Tips Banner with animation -->
+        <div class="bg-yellow-50 border-l-4 border-yellow-400 rounded-xl p-2 md:p-3 mb-3 md:mb-4 no-print animate-slideInLeft">
             <div class="flex items-center gap-2 text-xs md:text-sm">
-                <i class="fas fa-lightbulb text-yellow-600"></i>
+                <i class="fas fa-lightbulb text-yellow-600 animate-pulse-slow"></i>
                 <span id="tipText">💡 Tip: Start typing - auto suggestions appear! | குறிப்பு: தட்டச்சு செய்ய ஆரம்பித்தால் பரிந்துரைகள் வரும்!</span>
             </div>
         </div>
 
         <!-- Business Info Card -->
-        <div class="bg-white rounded-2xl shadow-xl p-3 md:p-6 mb-3 md:mb-4 card-hover">
+        <div class="bg-white rounded-2xl shadow-xl p-3 md:p-6 mb-3 md:mb-4 card-hover animate-slideInRight" style="animation-delay: 0.1s">
             <div class="flex items-center gap-2 mb-3 md:mb-4">
                 <i class="fas fa-store text-blue-600 text-lg md:text-xl"></i>
                 <h2 class="text-lg md:text-xl font-bold text-gray-800">
@@ -329,7 +535,7 @@
         </div>
 
         <!-- Create Invoice Section -->
-        <div class="bg-white rounded-2xl shadow-xl p-3 md:p-6 mb-3 md:mb-4 card-hover">
+        <div class="bg-white rounded-2xl shadow-xl p-3 md:p-6 mb-3 md:mb-4 card-hover animate-fadeInUp" style="animation-delay: 0.2s">
             <div class="flex items-center gap-2 mb-3 md:mb-4">
                 <i class="fas fa-plus-circle text-green-600 text-lg md:text-xl"></i>
                 <h2 class="text-lg md:text-xl font-bold text-gray-800">
@@ -351,30 +557,21 @@
                 </div>
             </div>
             
-            <!-- Items Table - Mobile Responsive with Wider Item Column -->
+            <!-- Items Table -->
             <div class="mb-3 md:mb-4">
                 <label class="block text-xs md:text-sm font-medium text-gray-700 mb-2" id="itemsLabel">📦 Items / பொருட்கள்</label>
                 <div class="items-table-wrapper overflow-x-auto -mx-1 px-1">
                     <table class="items-table border-collapse">
                         <thead class="bg-gradient-to-r from-gray-100 to-gray-200">
                             <tr>
-                                <th class="border p-2 md:p-3 text-left text-xs md:text-sm" id="itemNameHeader">
-                                    Item Name / பொருள் பெயர்
-                                </th>
-                                <th class="border p-2 md:p-3 text-center text-xs md:text-sm" style="width: 70px;" id="qtyHeader">
-                                    Qty
-                                </th>
-                                <th class="border p-2 md:p-3 text-center text-xs md:text-sm" style="width: 80px;" id="priceHeader">
-                                    Price
-                                </th>
-                                <th class="border p-2 md:p-3 text-center text-xs md:text-sm" style="width: 80px;" id="totalHeader">
-                                    Total
-                                </th>
+                                <th class="border p-2 md:p-3 text-left text-xs md:text-sm" id="itemNameHeader">Item Name / பொருள் பெயர்</th>
+                                <th class="border p-2 md:p-3 text-center text-xs md:text-sm" style="width: 70px;" id="qtyHeader">Qty</th>
+                                <th class="border p-2 md:p-3 text-center text-xs md:text-sm" style="width: 80px;" id="priceHeader">Price</th>
+                                <th class="border p-2 md:p-3 text-center text-xs md:text-sm" style="width: 80px;" id="totalHeader">Total</th>
                                 <th class="border p-2 md:p-3 text-center text-xs md:text-sm" style="width: 40px;"></th>
                             </tr>
                         </thead>
-                        <tbody id="itemsTable">
-                        </tbody>
+                        <tbody id="itemsTable"></tbody>
                     </table>
                 </div>
                 <button onclick="addItemRow()" class="mt-3 bg-green-500 hover:bg-green-600 text-white px-4 md:px-5 py-2 rounded-xl transition active:scale-95 flex items-center gap-2 shadow text-sm md:text-base">
@@ -386,15 +583,9 @@
             <!-- Summary Section -->
             <div class="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-3 md:p-4 mb-3 md:mb-4">
                 <div class="flex flex-wrap justify-end gap-2 md:gap-3 text-right">
-                    <div class="text-xs md:text-sm">
-                        <span id="subtotalLabel">Subtotal</span>: ₹<span id="subtotal" class="font-mono font-bold">0</span>
-                    </div>
-                    <div class="text-xs md:text-sm">
-                        <span id="gstLabel">GST (5%)</span>: ₹<span id="gstAmount" class="font-mono font-bold">0</span>
-                    </div>
-                    <div class="text-sm md:text-base lg:text-xl font-bold text-blue-700">
-                        <span id="totalLabel">Total</span>: ₹<span id="grandTotal" class="font-mono">0</span>
-                    </div>
+                    <div class="text-xs md:text-sm"><span id="subtotalLabel">Subtotal</span>: ₹<span id="subtotal" class="font-mono font-bold">0</span></div>
+                    <div class="text-xs md:text-sm"><span id="gstLabel">GST (5%)</span>: ₹<span id="gstAmount" class="font-mono font-bold">0</span></div>
+                    <div class="text-sm md:text-base lg:text-xl font-bold text-blue-700"><span id="totalLabel">Total</span>: ₹<span id="grandTotal" class="font-mono">0</span></div>
                 </div>
             </div>
             
@@ -406,20 +597,18 @@
             </div>
             
             <!-- Save Button -->
-            <button onclick="saveInvoice()" class="btn-primary w-full text-white px-4 md:px-6 py-3 md:py-4 rounded-xl font-bold text-sm md:text-base lg:text-lg shadow-xl transition active:scale-98 flex items-center justify-center gap-2 md:gap-3">
+            <button onclick="saveInvoice()" id="saveInvoiceBtn" class="btn-primary w-full text-white px-4 md:px-6 py-3 md:py-4 rounded-xl font-bold text-sm md:text-base lg:text-lg shadow-xl transition active:scale-98 flex items-center justify-center gap-2 md:gap-3">
                 <i class="fas fa-save text-sm md:text-base"></i>
                 <span id="saveBtnText">💾 Save Invoice & Print</span>
             </button>
         </div>
 
         <!-- Invoices List -->
-        <div class="bg-white rounded-2xl shadow-xl p-3 md:p-6">
+        <div class="bg-white rounded-2xl shadow-xl p-3 md:p-6 animate-slideInLeft" style="animation-delay: 0.3s">
             <div class="flex justify-between items-center mb-3 md:mb-4">
                 <div class="flex items-center gap-2">
                     <i class="fas fa-history text-purple-600 text-lg md:text-xl"></i>
-                    <h2 class="text-lg md:text-xl font-bold text-gray-800">
-                        <span id="historyTitle">📄 My Invoices</span>
-                    </h2>
+                    <h2 class="text-lg md:text-xl font-bold text-gray-800"><span id="historyTitle">📄 My Invoices</span></h2>
                 </div>
                 <span class="bg-gray-200 px-2 md:px-3 py-0.5 md:py-1 rounded-full text-xs md:text-sm font-semibold" id="invoiceCount">(0)</span>
             </div>
@@ -432,22 +621,25 @@
         </div>
         
         <!-- Footer -->
-        <div class="text-center text-white text-[9px] md:text-xs py-3 md:py-4 opacity-75 no-print">
-            <p>© 2026 Hosur Invoice Bill | Created by Shri Muhammed Zabiullah Khan | Krishnagiri District, Tamil Nadu</p>
+        <div class="text-center text-white text-[9px] md:text-xs py-3 md:py-4 opacity-75 no-print animate-fadeInUp">
+            <p>© 2026 Hosur Invoice Bill | Support: <a href="mailto:0gbtechintel@gmail.com" class="text-white underline">0gbtechintel@gmail.com</a> | Hosur, Krishnagiri District, TN</p>
         </div>
     </div>
 
     <script src="app.js"></script>
     <script src="sync.js"></script>
     
-    <!-- Digital Clock Script -->
+    <!-- 12-Hour Clock Script -->
     <script>
         function updateClock() {
             const now = new Date();
-            const hours = String(now.getHours()).padStart(2, '0');
+            let hours = now.getHours();
             const minutes = String(now.getMinutes()).padStart(2, '0');
             const seconds = String(now.getSeconds()).padStart(2, '0');
-            const timeString = `${hours}:${minutes}:${seconds}`;
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12;
+            const timeString = `${hours}:${minutes}:${seconds} ${ampm}`;
             
             const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
             const dateString = now.toLocaleDateString('ta-IN', options);
@@ -461,6 +653,76 @@
         
         updateClock();
         setInterval(updateClock, 1000);
+        
+        // Settings functions
+        function openSettings() {
+            document.getElementById('settingsPanel').classList.add('open');
+            document.getElementById('settingsOverlay').classList.add('active');
+        }
+        
+        function closeSettings() {
+            document.getElementById('settingsPanel').classList.remove('open');
+            document.getElementById('settingsOverlay').classList.remove('active');
+        }
+        
+        // Theme change
+        function changeTheme(theme) {
+            document.body.className = '';
+            document.body.classList.add(`theme-${theme}`);
+            localStorage.setItem('app_theme', theme);
+            
+            // Update active state on theme options
+            document.querySelectorAll('.theme-option').forEach(opt => {
+                opt.classList.remove('active');
+                if (opt.getAttribute('data-theme') === theme) {
+                    opt.classList.add('active');
+                }
+            });
+            
+            showToast(`Theme changed to ${theme}`, 'success');
+            closeSettings();
+        }
+        
+        // Load saved theme
+        const savedTheme = localStorage.getItem('app_theme');
+        if (savedTheme) {
+            document.body.classList.add(`theme-${savedTheme}`);
+        }
+        
+        // QR Code functions
+        function showQRCode() {
+            const modal = document.getElementById('qrModal');
+            modal.classList.add('active');
+            
+            // Generate QR code
+            const qrcodeDiv = document.getElementById('qrcode');
+            qrcodeDiv.innerHTML = '';
+            new QRCode(qrcodeDiv, {
+                text: window.location.href,
+                width: 200,
+                height: 200,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        }
+        
+        function closeQRModal() {
+            document.getElementById('qrModal').classList.remove('active');
+        }
+        
+        function showToast(message, type) {
+            const toast = document.createElement('div');
+            toast.className = 'toast-notification';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2000);
+        }
+        
+        // Close modal on outside click
+        document.getElementById('qrModal').addEventListener('click', function(e) {
+            if (e.target === this) closeQRModal();
+        });
     </script>
 </body>
 </html>
