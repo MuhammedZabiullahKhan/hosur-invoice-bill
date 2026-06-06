@@ -40,6 +40,8 @@
             color: #f9fafb !important;
             border-color: #4b5563 !important;
         }
+        body.theme-dark .bg-gray-50, body.theme-dark .bg-gray-100 { background-color: #1f2937 !important; }
+        body.theme-dark .bg-blue-50 { background-color: #1e3a8a !important; }
         
         @keyframes fadeInUp {
             from { opacity: 0; transform: translateY(30px); }
@@ -83,6 +85,7 @@
             width: 350px;
             text-align: center;
         }
+        body.theme-dark .modal-content { background: #374151; color: white; }
         
         .settings-panel {
             position: fixed;
@@ -98,6 +101,8 @@
             overflow-y: auto;
         }
         .settings-panel.open { right: 0; }
+        body.theme-dark .settings-panel { background: #1f2937; color: white; }
+        
         .settings-overlay {
             display: none;
             position: fixed;
@@ -133,6 +138,7 @@
             font-size: 14px;
             z-index: 2000;
             white-space: nowrap;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
         }
         
         .items-table-wrapper { overflow-x: auto; }
@@ -155,9 +161,16 @@
         
         .invoice-item { transition: all 0.3s ease; }
         .invoice-item:hover { transform: translateX(5px); background-color: #f9fafb; }
+        body.theme-dark .invoice-item:hover { background-color: #4b5563; }
         
         .btn-new-bill { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
         .btn-new-bill:active { transform: scale(0.98); }
+        
+        @media (max-width: 640px) {
+            body { padding: 8px; }
+            .text-xl { font-size: 1.125rem; }
+            .p-4 { padding: 12px; }
+        }
     </style>
 </head>
 <body>
@@ -166,14 +179,14 @@
     <div class="settings-panel" id="settingsPanel">
         <div class="p-4">
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-bold"><i class="fas fa-cog"></i> Settings</h2>
+                <h2 class="text-xl font-bold" id="settingsTitle"><i class="fas fa-cog"></i> Settings</h2>
                 <button onclick="closeSettings()" class="text-2xl">&times;</button>
             </div>
             
             <!-- UPI QR Upload -->
             <div class="mb-6 border-b pb-4">
-                <h3 class="font-semibold mb-2"><i class="fas fa-qrcode text-green-600"></i> Your Payment QR Code</h3>
-                <p class="text-xs text-gray-500 mb-2">Upload your GPay/PhonePe/Paytm QR code</p>
+                <h3 class="font-semibold mb-2" id="qrUploadTitle"><i class="fas fa-qrcode text-green-600"></i> Your Payment QR Code</h3>
+                <p class="text-xs text-gray-500 mb-2" id="qrUploadDesc">Upload your GPay/PhonePe/Paytm QR code</p>
                 
                 <div id="qrPreviewContainer" class="flex justify-center mb-3">
                     <img id="qrPreview" class="qr-preview" style="display: none;" alt="QR Preview">
@@ -183,17 +196,17 @@
                 </div>
                 
                 <input type="file" id="qrUpload" accept="image/*" class="hidden">
-                <button onclick="document.getElementById('qrUpload').click()" class="w-full bg-blue-500 text-white px-3 py-2 rounded-lg text-sm hover:bg-blue-600 transition mb-2">
+                <button id="uploadQRBtn" onclick="document.getElementById('qrUpload').click()" class="w-full bg-blue-500 text-white px-3 py-2 rounded-lg text-sm hover:bg-blue-600 transition mb-2">
                     <i class="fas fa-upload"></i> Upload QR Code
                 </button>
-                <button onclick="removeQRCode()" class="w-full bg-red-500 text-white px-3 py-2 rounded-lg text-sm hover:bg-red-600 transition">
+                <button id="removeQRBtn" onclick="removeQRCode()" class="w-full bg-red-500 text-white px-3 py-2 rounded-lg text-sm hover:bg-red-600 transition">
                     <i class="fas fa-trash"></i> Remove QR Code
                 </button>
             </div>
             
             <!-- Theme Selection -->
             <div class="mb-6 border-b pb-4">
-                <h3 class="font-semibold mb-2">🎨 Theme Color</h3>
+                <h3 class="font-semibold mb-2" id="themeTitle">🎨 Theme Color</h3>
                 <div class="flex gap-3 flex-wrap">
                     <div class="theme-option" style="background: linear-gradient(135deg, #667eea, #764ba2);" onclick="changeTheme('purple')" data-theme="purple"></div>
                     <div class="theme-option" style="background: linear-gradient(135deg, #1e3a8a, #3b82f6);" onclick="changeTheme('blue')" data-theme="blue"></div>
@@ -205,17 +218,17 @@
             
             <!-- Clear Data -->
             <div class="mb-6 border-b pb-4">
-                <h3 class="font-semibold mb-2">🗑️ Data Management</h3>
-                <button onclick="clearAllData()" class="w-full bg-red-500 text-white px-4 py-2 rounded-xl hover:bg-red-600 transition">
+                <h3 class="font-semibold mb-2" id="dataTitle">🗑️ Data Management</h3>
+                <button id="clearDataBtn" onclick="clearAllData()" class="w-full bg-red-500 text-white px-4 py-2 rounded-xl hover:bg-red-600 transition">
                     <i class="fas fa-trash-alt"></i> Clear All My Data
                 </button>
-                <p class="text-xs text-gray-500 mt-1">Warning: This will delete all your invoices</p>
+                <p class="text-xs text-gray-500 mt-1" id="clearWarning">Warning: This will delete all your invoices</p>
             </div>
             
             <!-- About -->
             <div>
-                <h3 class="font-semibold mb-2">ℹ️ About</h3>
-                <p class="text-sm mb-2">Hosur Invoice Bill - Free invoice generator</p>
+                <h3 class="font-semibold mb-2" id="aboutTitle">ℹ️ About</h3>
+                <p class="text-sm mb-2" id="aboutText">Hosur Invoice Bill - Free invoice generator</p>
                 <p class="text-sm"><i class="fas fa-envelope"></i> <a href="mailto:0gbtechintel@gmail.com" class="text-blue-500">0gbtechintel@gmail.com</a></p>
                 <p class="text-xs text-gray-500 mt-2">Version 2.0 | Created by Shri Muhammed Zabiullah Khan</p>
             </div>
@@ -226,18 +239,18 @@
     <div class="modal" id="paymentQRModal">
         <div class="modal-content">
             <div class="flex justify-between items-center mb-3">
-                <h3 class="text-lg font-bold">Scan to Pay</h3>
+                <h3 class="text-lg font-bold" id="paymentQRTitle">Scan to Pay</h3>
                 <button onclick="closePaymentQRModal()" class="text-2xl">&times;</button>
             </div>
             <div id="paymentQrcode">
                 <img id="paymentQRImage" class="qr-preview-large" style="display: none;" alt="Payment QR">
                 <div id="noQRMessage" class="text-center py-8">
                     <i class="fas fa-qrcode text-6xl text-gray-300 mb-2"></i>
-                    <p>No payment QR uploaded. Please add in settings.</p>
+                    <p id="noQRText">No payment QR uploaded. Please add in settings.</p>
                 </div>
             </div>
-            <p class="text-sm text-gray-500 mt-2">Scan with GPay, PhonePe, or Paytm</p>
-            <button onclick="closePaymentQRModal()" class="btn-primary w-full mt-3 px-4 py-2 rounded-xl text-white">Close</button>
+            <p class="text-sm text-gray-500 mt-2" id="paymentQRInstruction">Scan with GPay, PhonePe, or Paytm</p>
+            <button id="qrCloseBtn" onclick="closePaymentQRModal()" class="btn-primary w-full mt-3 px-4 py-2 rounded-xl text-white">Close</button>
         </div>
     </div>
     
@@ -252,13 +265,13 @@
                             <i class="fas fa-file-invoice text-white text-xl"></i>
                         </div>
                         <div>
-                            <h1 class="text-xl md:text-2xl font-extrabold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                            <h1 class="text-xl md:text-2xl font-extrabold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent" id="appTitle">
                                 ஹொசூர் இன்வாய்ஸ்
                             </h1>
-                            <p class="text-xs text-gray-500">Hosur Invoice Bill</p>
+                            <p class="text-xs text-gray-500" id="subtitleText">Hosur Invoice Bill</p>
                         </div>
                     </div>
-                    <p class="text-xs text-gray-400 mt-0.5">by Shri Muhammed Zabiullah Khan</p>
+                    <p class="text-xs text-gray-400 mt-0.5" id="createdByText">by Shri Muhammed Zabiullah Khan</p>
                 </div>
                 
                 <!-- Clock -->
@@ -271,16 +284,24 @@
                 
                 <!-- Buttons -->
                 <div class="flex gap-2 flex-wrap justify-center">
-                    <button onclick="showPaymentQR()" class="bg-green-500 text-white px-3 py-1.5 rounded-xl text-sm shadow-md">
+                    <button id="showQRBtn" onclick="showPaymentQR()" class="bg-green-500 text-white px-3 py-1.5 rounded-xl text-sm shadow-md hover:bg-green-600 transition">
                         <i class="fas fa-qrcode"></i> Show QR
                     </button>
-                    <button onclick="toggleLanguage()" id="langBtn" class="bg-blue-500 text-white px-3 py-1.5 rounded-xl text-sm shadow-md">
+                    <button id="langBtn" onclick="toggleLanguage()" class="bg-blue-500 text-white px-3 py-1.5 rounded-xl text-sm shadow-md hover:bg-blue-600 transition">
                         <i class="fas fa-language"></i> தமிழ்
                     </button>
-                    <button onclick="openSettings()" class="bg-gray-500 text-white px-3 py-1.5 rounded-xl text-sm shadow-md">
+                    <button id="settingsBtn" onclick="openSettings()" class="bg-gray-500 text-white px-3 py-1.5 rounded-xl text-sm shadow-md hover:bg-gray-600 transition">
                         <i class="fas fa-cog"></i> Settings
                     </button>
                 </div>
+            </div>
+        </div>
+
+        <!-- Tips -->
+        <div class="bg-yellow-50 border-l-4 border-yellow-400 rounded-xl p-2 md:p-3 mb-4 no-print animate-slideInLeft">
+            <div class="flex items-center gap-2 text-xs md:text-sm">
+                <i class="fas fa-lightbulb text-yellow-600"></i>
+                <span id="tipText">💡 Tip: Start typing - auto suggestions appear! Upload your payment QR in Settings!</span>
             </div>
         </div>
 
@@ -288,28 +309,28 @@
         <div class="bg-white rounded-2xl shadow-xl p-4 md:p-6 mb-4 card-hover">
             <div class="flex items-center gap-2 mb-4">
                 <i class="fas fa-store text-blue-600 text-xl"></i>
-                <h2 class="text-xl font-bold text-gray-800">🏪 My Business Details</h2>
+                <h2 class="text-xl font-bold text-gray-800" id="businessTitle">🏪 My Business Details</h2>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Business Name</label>
-                    <input type="text" id="businessName" class="w-full border-2 border-gray-300 p-2 rounded-xl">
+                    <label class="block text-sm font-medium text-gray-700 mb-1" id="businessNameLabel">Business Name</label>
+                    <input type="text" id="businessName" class="w-full border-2 border-gray-300 p-2 rounded-xl focus:border-blue-500 focus:outline-none">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Contact & Address</label>
-                    <input type="text" id="businessContact" class="w-full border-2 border-gray-300 p-2 rounded-xl">
+                    <label class="block text-sm font-medium text-gray-700 mb-1" id="businessContactLabel">Contact & Address</label>
+                    <input type="text" id="businessContact" class="w-full border-2 border-gray-300 p-2 rounded-xl focus:border-blue-500 focus:outline-none">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Invoice Prefix</label>
-                    <input type="text" id="invoicePrefix" value="HOSUR-2026-" class="w-full border-2 border-gray-300 p-2 rounded-xl">
+                    <label class="block text-sm font-medium text-gray-700 mb-1" id="invoicePrefixLabel">Invoice Prefix</label>
+                    <input type="text" id="invoicePrefix" value="HOSUR-2026-" class="w-full border-2 border-gray-300 p-2 rounded-xl focus:border-blue-500 focus:outline-none">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Next Invoice #</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1" id="nextInvoiceLabel">Next Invoice #</label>
                     <div class="bg-blue-50 p-2 rounded-xl font-mono font-bold text-xl text-blue-700 text-center" id="nextInvoiceNumber">---</div>
                 </div>
             </div>
             <div class="mt-2 text-xs text-gray-500" id="syncStatus">
-                <i class="fas fa-circle-notch fa-spin"></i> Ready
+                <i class="fas fa-circle-notch fa-spin"></i> <span id="syncText">Ready</span>
             </div>
         </div>
 
@@ -318,60 +339,60 @@
             <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
                 <div class="flex items-center gap-2">
                     <i class="fas fa-plus-circle text-green-600 text-xl"></i>
-                    <h2 class="text-xl font-bold text-gray-800">➕ Create New Invoice</h2>
+                    <h2 class="text-xl font-bold text-gray-800" id="createInvoiceTitle">➕ Create New Invoice</h2>
                 </div>
-                <button onclick="resetForNewBill()" class="btn-new-bill text-white px-4 py-2 rounded-xl font-semibold shadow-md flex items-center gap-2 text-sm">
+                <button id="newBillBtn" onclick="resetForNewBill()" class="btn-new-bill text-white px-4 py-2 rounded-xl font-semibold shadow-md flex items-center gap-2 text-sm">
                     <i class="fas fa-file"></i> New Bill
                 </button>
             </div>
             
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Customer Name</label>
-                    <input type="text" id="customerName" class="w-full border-2 border-gray-300 p-2 rounded-xl">
+                    <label class="block text-sm font-medium text-gray-700 mb-1" id="customerNameLabel">Customer Name</label>
+                    <input type="text" id="customerName" class="w-full border-2 border-gray-300 p-2 rounded-xl focus:border-blue-500 focus:outline-none">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Mobile Number</label>
-                    <input type="tel" id="customerMobile" class="w-full border-2 border-gray-300 p-2 rounded-xl">
+                    <label class="block text-sm font-medium text-gray-700 mb-1" id="customerMobileLabel">Mobile Number</label>
+                    <input type="tel" id="customerMobile" class="w-full border-2 border-gray-300 p-2 rounded-xl focus:border-blue-500 focus:outline-none">
                 </div>
             </div>
             
             <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-2">📦 Items</label>
+                <label class="block text-sm font-medium text-gray-700 mb-2" id="itemsLabel">📦 Items</label>
                 <div class="items-table-wrapper overflow-x-auto">
                     <table class="items-table border-collapse">
                         <thead class="bg-gray-100">
                             <tr>
-                                <th class="border p-2 text-left text-sm">Item Name</th>
-                                <th class="border p-2 text-center text-sm w-20">Qty</th>
-                                <th class="border p-2 text-center text-sm w-24">Price</th>
-                                <th class="border p-2 text-center text-sm w-24">Total</th>
+                                <th class="border p-2 text-left text-sm" id="itemNameHeader">Item Name</th>
+                                <th class="border p-2 text-center text-sm w-20" id="qtyHeader">Qty</th>
+                                <th class="border p-2 text-center text-sm w-24" id="priceHeader">Price</th>
+                                <th class="border p-2 text-center text-sm w-24" id="totalHeader">Total</th>
                                 <th class="border p-2 text-center w-10"></th>
                             </tr>
                         </thead>
                         <tbody id="itemsTable"></tbody>
                     </table>
                 </div>
-                <button onclick="addItemRow()" class="mt-3 bg-green-500 text-white px-4 py-2 rounded-xl flex items-center gap-2 shadow">
+                <button id="addItemBtn" onclick="addItemRow()" class="mt-3 bg-green-500 text-white px-4 py-2 rounded-xl flex items-center gap-2 shadow hover:bg-green-600 transition">
                     <i class="fas fa-plus"></i> Add Item
                 </button>
             </div>
             
             <div class="bg-gray-50 rounded-xl p-4 mb-4">
                 <div class="flex flex-wrap justify-end gap-3 text-right">
-                    <div>Subtotal: ₹<span id="subtotal">0</span></div>
-                    <div>GST (5%): ₹<span id="gstAmount">0</span></div>
-                    <div class="font-bold text-blue-700">Total: ₹<span id="grandTotal">0</span></div>
+                    <div><span id="subtotalLabel">Subtotal</span>: ₹<span id="subtotal">0</span></div>
+                    <div><span id="gstLabel">GST (5%)</span>: ₹<span id="gstAmount">0</span></div>
+                    <div class="font-bold text-blue-700"><span id="totalLabel">Total</span>: ₹<span id="grandTotal">0</span></div>
                 </div>
             </div>
             
             <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Notes (Tamil)</label>
-                <textarea id="tamilNotes" rows="2" class="w-full border-2 border-gray-300 p-2 rounded-xl">நன்றி! மீண்டும் வருக</textarea>
+                <label class="block text-sm font-medium text-gray-700 mb-1" id="notesLabel">Notes (Tamil)</label>
+                <textarea id="tamilNotes" rows="2" class="w-full border-2 border-gray-300 p-2 rounded-xl focus:border-blue-500 focus:outline-none">நன்றி! மீண்டும் வருக</textarea>
             </div>
             
-            <button onclick="saveInvoice()" id="saveInvoiceBtn" class="btn-primary w-full text-white py-3 rounded-xl font-bold shadow-xl flex items-center justify-center gap-2">
-                <i class="fas fa-save"></i> Save Invoice & Print
+            <button id="saveInvoiceBtn" onclick="saveInvoice()" class="btn-primary w-full text-white py-3 rounded-xl font-bold shadow-xl flex items-center justify-center gap-2">
+                <i class="fas fa-save"></i> <span id="saveBtnText">Save Invoice & Print</span>
             </button>
         </div>
 
@@ -380,27 +401,27 @@
             <div class="flex justify-between items-center mb-4">
                 <div class="flex items-center gap-2">
                     <i class="fas fa-history text-purple-600 text-xl"></i>
-                    <h2 class="text-xl font-bold text-gray-800">📄 My Invoices</h2>
+                    <h2 class="text-xl font-bold text-gray-800" id="historyTitle">📄 My Invoices</h2>
                 </div>
                 <span class="bg-gray-200 px-2 py-0.5 rounded-full text-xs font-semibold" id="invoiceCount">(0)</span>
             </div>
             <div id="invoicesList" class="space-y-2 max-h-96 overflow-y-auto">
                 <div class="text-center text-gray-500 py-8">
                     <i class="fas fa-file-invoice text-4xl mb-2 opacity-50"></i>
-                    <p>No invoices yet. Create your first invoice above!</p>
+                    <p id="noInvoicesText">No invoices yet. Create your first invoice above!</p>
                 </div>
             </div>
         </div>
         
         <div class="text-center text-white text-xs py-3">
-            <p>© 2026 Hosur Invoice Bill | <a href="mailto:0gbtechintel@gmail.com" class="text-white underline">0gbtechintel@gmail.com</a></p>
+            <p>© 2026 Hosur Invoice Bill | <a href="mailto:0gbtechintel@gmail.com" class="text-white underline">0gbtechintel@gmail.com</a> | Hosur, Krishnagiri District, TN</p>
         </div>
     </div>
 
     <script src="app.js"></script>
     
     <script>
-        // Clock
+        // 12-Hour Clock
         function updateClock() {
             const now = new Date();
             let hours = now.getHours();
