@@ -1,11 +1,15 @@
 // Hosur Invoice Bill - Main Application
 // Created by Shri Muhammed Zabiullah Khan
-// Full CRUD Operations: Create, Read, Update, Delete
+// Full CRUD Operations + Settings + QR + New Bill
 
 let db;
 let currentLanguage = 'tamil';
 let itemCounter = 0;
 let editingInvoiceId = null;
+
+// Global function references for HTML access
+window.currentLanguage = 'tamil';
+window.itemCounter = 0;
 
 // Tamil & English Translations
 const translations = {
@@ -34,8 +38,6 @@ const translations = {
         cancelEditText: "❌ ரத்து செய்",
         historyTitle: "📄 என் இன்வாய்ஸ்கள்",
         noInvoicesText: "இன்னும் இன்வாய்ஸ் இல்லை. மேலே உங்கள் முதல் இன்வாய்ஸ் உருவாக்கவும்!",
-        clearBtnText: "அழிக்க",
-        refreshBtnText: "புதுப்பி",
         editBtnText: "திருத்து",
         deleteBtnText: "நீக்கு",
         viewBtnText: "பார்",
@@ -63,7 +65,8 @@ const translations = {
         qrUploadTitle: "கட்டண QR குறியீடு",
         uploadQRBtn: "QR பதிவேற்று",
         removeQRBtn: "QR நீக்கு",
-        paymentQRTitle: "ஸ்கேன் செய்து பணம் செலுத்துங்கள்"
+        paymentQRTitle: "ஸ்கேன் செய்து பணம் செலுத்துங்கள்",
+        newBillBtnText: "புதிய பில்"
     },
     english: {
         businessTitle: "🏪 My Business Details",
@@ -90,8 +93,6 @@ const translations = {
         cancelEditText: "❌ Cancel",
         historyTitle: "📄 My Invoices",
         noInvoicesText: "No invoices yet. Create your first invoice above!",
-        clearBtnText: "Clear",
-        refreshBtnText: "Refresh",
         editBtnText: "Edit",
         deleteBtnText: "Delete",
         viewBtnText: "View",
@@ -119,10 +120,12 @@ const translations = {
         qrUploadTitle: "Payment QR Code",
         uploadQRBtn: "Upload QR",
         removeQRBtn: "Remove QR",
-        paymentQRTitle: "Scan to Pay"
+        paymentQRTitle: "Scan to Pay",
+        newBillBtnText: "New Bill"
     }
 };
 
+// Apply translations
 function applyTranslations() {
     const t = translations[currentLanguage];
     const elements = ['businessTitle', 'businessNameLabel', 'businessContactLabel', 'invoicePrefixLabel', 
@@ -130,7 +133,7 @@ function applyTranslations() {
         'itemNameHeader', 'qtyHeader', 'priceHeader', 'totalHeader', 'addItemBtnText', 'subtotalLabel',
         'gstLabel', 'totalLabel', 'notesLabel', 'historyTitle', 'noInvoicesText', 'settingsTitle', 
         'themeTitle', 'dataTitle', 'clearDataBtn', 'aboutTitle', 'aboutText', 'showQRBtnText',
-        'qrUploadTitle', 'uploadQRBtn', 'removeQRBtn', 'paymentQRTitle'];
+        'qrUploadTitle', 'uploadQRBtn', 'removeQRBtn', 'paymentQRTitle', 'newBillBtnText'];
     
     elements.forEach(id => {
         const el = document.getElementById(id);
@@ -164,7 +167,7 @@ function updateSaveButtonText() {
     const saveBtnSpan = document.getElementById('saveBtnText');
     const t = translations[currentLanguage];
     if (editingInvoiceId) {
-        saveBtnSpan.textContent = t.updateBtnText;
+        if (saveBtnSpan) saveBtnSpan.textContent = t.updateBtnText;
         const saveBtn = document.getElementById('saveInvoiceBtn');
         if (saveBtn) {
             saveBtn.classList.remove('btn-primary');
@@ -187,7 +190,7 @@ function updateSaveButtonText() {
             if (span) span.textContent = t.cancelEditText;
         }
     } else {
-        saveBtnSpan.textContent = t.saveBtnText;
+        if (saveBtnSpan) saveBtnSpan.textContent = t.saveBtnText;
         const saveBtn = document.getElementById('saveInvoiceBtn');
         if (saveBtn) {
             saveBtn.classList.remove('bg-orange-500', 'hover:bg-orange-600');
@@ -220,8 +223,47 @@ function clearInvoiceForm() {
     calculateAllTotals();
 }
 
+// NEW BILL FUNCTION - Called from HTML
+function resetForNewBill() {
+    // Clear customer fields
+    document.getElementById('customerName').value = '';
+    document.getElementById('customerMobile').value = '';
+    
+    // Reset notes to default
+    const defaultNotes = currentLanguage === 'tamil' ? 'நன்றி! மீண்டும் வருக' : 'Thank you! Visit again';
+    document.getElementById('tamilNotes').value = defaultNotes;
+    
+    // Clear items table and add one empty row
+    const tbody = document.getElementById('itemsTable');
+    if (tbody) {
+        tbody.innerHTML = '';
+        itemCounter = 0;
+        addItemRow();
+    }
+    
+    // Recalculate totals
+    calculateAllTotals();
+    
+    // Cancel any editing mode
+    if (editingInvoiceId) {
+        editingInvoiceId = null;
+        updateSaveButtonText();
+        const titleSpan = document.getElementById('createInvoiceTitle');
+        if (titleSpan) titleSpan.textContent = translations[currentLanguage].createInvoiceTitle;
+    }
+    
+    // Show success message
+    const successMsg = currentLanguage === 'tamil' ? '✅ புதிய பில்லுக்கு தயார்! வாடிக்கையாளர் விவரங்களை உள்ளிடவும்.' : '✅ Ready for new bill! Enter customer details.';
+    showToast(successMsg, 'success');
+    
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Toggle Language
 function toggleLanguage() {
     currentLanguage = currentLanguage === 'tamil' ? 'english' : 'tamil';
+    window.currentLanguage = currentLanguage;
     applyTranslations();
     showToast(currentLanguage === 'tamil' ? '✅ தமிழுக்கு மாற்றப்பட்டது' : '✅ Switched to English', 'success');
 }
@@ -232,6 +274,85 @@ function showToast(message, type = 'info') {
     toast.textContent = message;
     document.body.appendChild(toast);
     setTimeout(() => toast.remove(), 2000);
+}
+
+// Settings Panel Functions
+function openSettings() {
+    const panel = document.getElementById('settingsPanel');
+    const overlay = document.getElementById('settingsOverlay');
+    if (panel) panel.classList.add('open');
+    if (overlay) overlay.classList.add('active');
+}
+
+function closeSettings() {
+    const panel = document.getElementById('settingsPanel');
+    const overlay = document.getElementById('settingsOverlay');
+    if (panel) panel.classList.remove('open');
+    if (overlay) overlay.classList.remove('active');
+}
+
+// Theme change
+function changeTheme(theme) {
+    document.body.className = '';
+    document.body.classList.add(`theme-${theme}`);
+    localStorage.setItem('app_theme', theme);
+    document.querySelectorAll('.theme-option').forEach(opt => opt.classList.remove('active'));
+    const activeOpt = document.querySelector(`.theme-option[data-theme="${theme}"]`);
+    if (activeOpt) activeOpt.classList.add('active');
+    showToast(`Theme changed to ${theme}`, 'success');
+    closeSettings();
+}
+
+// QR Code Functions
+function showPaymentQR() {
+    const savedQR = localStorage.getItem('payment_qr');
+    const modal = document.getElementById('paymentQRModal');
+    const qrImage = document.getElementById('paymentQRImage');
+    const noQRMessage = document.getElementById('noQRMessage');
+    
+    if (savedQR && qrImage) {
+        qrImage.src = savedQR;
+        qrImage.style.display = 'block';
+        if (noQRMessage) noQRMessage.style.display = 'none';
+    } else {
+        if (qrImage) qrImage.style.display = 'none';
+        if (noQRMessage) noQRMessage.style.display = 'block';
+    }
+    if (modal) modal.classList.add('active');
+}
+
+function closePaymentQRModal() {
+    const modal = document.getElementById('paymentQRModal');
+    if (modal) modal.classList.remove('active');
+}
+
+function handleQRUpload(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const qrData = e.target.result;
+            localStorage.setItem('payment_qr', qrData);
+            const qrPreview = document.getElementById('qrPreview');
+            const qrPlaceholder = document.getElementById('qrPlaceholder');
+            if (qrPreview) {
+                qrPreview.src = qrData;
+                qrPreview.style.display = 'block';
+            }
+            if (qrPlaceholder) qrPlaceholder.style.display = 'none';
+            showToast('QR code uploaded successfully!', 'success');
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function removeQRCode() {
+    localStorage.removeItem('payment_qr');
+    const qrPreview = document.getElementById('qrPreview');
+    const qrPlaceholder = document.getElementById('qrPlaceholder');
+    if (qrPreview) qrPreview.style.display = 'none';
+    if (qrPlaceholder) qrPlaceholder.style.display = 'flex';
+    showToast('QR code removed', 'info');
 }
 
 // IndexedDB Functions
@@ -467,9 +588,12 @@ function calculateAllTotals() {
     });
     const gst = subtotal * 0.05;
     const total = subtotal + gst;
-    document.getElementById('subtotal').innerText = subtotal.toFixed(2);
-    document.getElementById('gstAmount').innerText = gst.toFixed(2);
-    document.getElementById('grandTotal').innerText = total.toFixed(2);
+    const subtotalEl = document.getElementById('subtotal');
+    const gstEl = document.getElementById('gstAmount');
+    const grandTotalEl = document.getElementById('grandTotal');
+    if (subtotalEl) subtotalEl.innerText = subtotal.toFixed(2);
+    if (gstEl) gstEl.innerText = gst.toFixed(2);
+    if (grandTotalEl) grandTotalEl.innerText = total.toFixed(2);
     return { subtotal, gst, total };
 }
 
@@ -555,7 +679,7 @@ function initializeFirstRow() {
     addItemRow();
 }
 
-// Edit Invoice - Load data into form
+// Edit Invoice
 async function editInvoice(invoiceId) {
     const invoice = await getInvoiceById(invoiceId);
     if (!invoice) return;
@@ -691,7 +815,8 @@ async function saveInvoice() {
         document.getElementById('customerName').value = '';
         document.getElementById('customerMobile').value = '';
         const nextNum = await getNextInvoiceNumber();
-        document.getElementById('nextInvoiceNumber').innerText = nextNum;
+        const nextNumSpan = document.getElementById('nextInvoiceNumber');
+        if (nextNumSpan) nextNumSpan.innerText = nextNum;
         showToast(t.syncSuccess, 'success');
     }
     
@@ -739,7 +864,7 @@ function generatePrintPDF(invoice) {
             <div style="text-align:right;"><p>Subtotal: ₹${invoice.subtotal}</p>
             <p>GST (5%): ₹${invoice.gst}</p><h3>Total: ₹${invoice.total}</h3></div>
             <div class="footer"><p>${escapeHtml(invoice.tamilNotes)}</p>
-            <p>Powered by Hosur Invoice Bill | shri-muhammed-zabiullah-khan</p></div>
+            <p>Powered by Hosur Invoice Bill</p></div>
         </div>
         <script>window.print();setTimeout(()=>window.close(),1000);<\/script>
         </body></html>
@@ -756,7 +881,7 @@ async function loadInvoices() {
     if (countSpan) countSpan.innerText = `(${invoices.length})`;
     
     if (invoices.length === 0) {
-        container.innerHTML = `<div class="text-center text-gray-500 py-8"><i class="fas fa-file-invoice text-4xl mb-2 opacity-50"></i><p>${t.noInvoicesText}</p></div>`;
+        if (container) container.innerHTML = `<div class="text-center text-gray-500 py-8"><i class="fas fa-file-invoice text-4xl mb-2 opacity-50"></i><p>${t.noInvoicesText}</p></div>`;
         return;
     }
     
@@ -818,6 +943,7 @@ async function clearAllData() {
         calculateAllTotals();
         await loadAutoCompleteData();
         showToast('✅ All data cleared!', 'info');
+        closeSettings();
     }
 }
 
@@ -855,6 +981,28 @@ async function setupCustomerNameAutoComplete() {
     });
 }
 
+// Load saved theme on page load
+function loadSavedTheme() {
+    const savedTheme = localStorage.getItem('app_theme');
+    if (savedTheme) {
+        document.body.classList.add(`theme-${savedTheme}`);
+    }
+}
+
+// Load saved QR on page load
+function loadSavedQR() {
+    const savedQR = localStorage.getItem('payment_qr');
+    if (savedQR) {
+        const qrPreview = document.getElementById('qrPreview');
+        const qrPlaceholder = document.getElementById('qrPlaceholder');
+        if (qrPreview) {
+            qrPreview.src = savedQR;
+            qrPreview.style.display = 'block';
+        }
+        if (qrPlaceholder) qrPlaceholder.style.display = 'none';
+    }
+}
+
 // Event Listeners
 document.getElementById('businessName')?.addEventListener('input', async (e) => {
     const info = await loadBusinessInfo();
@@ -874,9 +1022,29 @@ document.getElementById('invoicePrefix')?.addEventListener('change', async (e) =
     calculateAllTotals();
 });
 
+// Make functions global for HTML access
+window.toggleLanguage = toggleLanguage;
+window.openSettings = openSettings;
+window.closeSettings = closeSettings;
+window.changeTheme = changeTheme;
+window.showPaymentQR = showPaymentQR;
+window.closePaymentQRModal = closePaymentQRModal;
+window.handleQRUpload = handleQRUpload;
+window.removeQRCode = removeQRCode;
+window.resetForNewBill = resetForNewBill;
+window.addItemRow = addItemRow;
+window.removeItemRow = removeItemRow;
+window.saveInvoice = saveInvoice;
+window.editInvoice = editInvoice;
+window.deleteInvoice = deleteInvoice;
+window.viewInvoiceDetails = viewInvoiceDetails;
+window.clearAllData = clearAllData;
+
 // Initialize
 (async function init() {
     try {
+        loadSavedTheme();
+        loadSavedQR();
         await initDB();
         await applyTranslations();
         const business = await loadBusinessInfo();
@@ -891,7 +1059,7 @@ document.getElementById('invoicePrefix')?.addEventListener('change', async (e) =
         calculateAllTotals();
         await setupBusinessNameAutoComplete();
         await setupCustomerNameAutoComplete();
-        console.log('✅ Hosur Invoice Bill Ready | Full CRUD Operations Enabled');
+        console.log('✅ Hosur Invoice Bill Ready | All Features Working');
     } catch (error) {
         console.error('Init error:', error);
         alert('Error loading app. Please refresh.');
