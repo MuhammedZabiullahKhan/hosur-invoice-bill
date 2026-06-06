@@ -1,11 +1,11 @@
 // Hosur Invoice Bill - Main Application
 // Created by Shri Muhammed Zabiullah Khan
-// Full Tamil & English Support | Mobile Optimized | CRUD Operations
+// Full CRUD Operations: Create, Read, Update, Delete
 
 let db;
 let currentLanguage = 'tamil';
 let itemCounter = 0;
-let editingInvoiceId = null; // Track if we're editing an invoice
+let editingInvoiceId = null;
 
 // Tamil & English Translations
 const translations = {
@@ -25,13 +25,12 @@ const translations = {
         priceHeader: "விலை (₹)",
         totalHeader: "மொத்தம் (₹)",
         addItemBtnText: "பொருள் சேர்",
-        updateInvoiceBtnText: "🔄 இன்வாய்ஸ் புதுப்பி",
         subtotalLabel: "துணை மொத்தம்",
         gstLabel: "ஜிஎஸ்டி (5%)",
         totalLabel: "மொத்தம்",
         notesLabel: "குறிப்புகள்",
-        saveBtnText: "💾 இன்வாய்ஸ் சேமி & அச்சிடு",
-        updateBtnText: "🔄 புதுப்பி & அச்சிடு",
+        saveBtnText: "💾 இன்வாய்ஸ் சேமி",
+        updateBtnText: "🔄 இன்வாய்ஸ் புதுப்பி",
         cancelEditText: "❌ ரத்து செய்",
         historyTitle: "📄 என் இன்வாய்ஸ்கள்",
         noInvoicesText: "இன்னும் இன்வாய்ஸ் இல்லை. மேலே உங்கள் முதல் இன்வாய்ஸ் உருவாக்கவும்!",
@@ -53,7 +52,18 @@ const translations = {
         syncText: "சின்க் செய்கிறது...",
         syncSuccess: "✅ இன்வாய்ஸ் வெற்றிகரமாக சேமிக்கப்பட்டது!",
         noItemAlert: "⚠️ தயவுசெய்து குறைந்தது ஒரு பொருளையாவது சேர்க்கவும்!",
-        clearConfirm: "⚠️ எச்சரிக்கை: இது உங்கள் உலாவியில் உள்ள அனைத்து இன்வாய்ஸ்களையும் நீக்கும்!\n\nதொடரவா?"
+        clearConfirm: "⚠️ எச்சரிக்கை: இது உங்கள் உலாவியில் உள்ள அனைத்து இன்வாய்ஸ்களையும் நீக்கும்!\n\nதொடரவா?",
+        settingsTitle: "அமைப்புகள்",
+        themeTitle: "🎨 வண்ணம்",
+        dataTitle: "🗑️ தரவு மேலாண்மை",
+        clearDataBtn: "எல்லா தரவையும் அழிக்க",
+        aboutTitle: "ℹ️ பற்றி",
+        aboutText: "ஹொசூர் இன்வாய்ஸ் - சிறு வணிகங்களுக்கான இலவச இன்வாய்ஸ் ஜெனரேட்டர்",
+        showQRBtnText: "QR காட்டு",
+        qrUploadTitle: "கட்டண QR குறியீடு",
+        uploadQRBtn: "QR பதிவேற்று",
+        removeQRBtn: "QR நீக்கு",
+        paymentQRTitle: "ஸ்கேன் செய்து பணம் செலுத்துங்கள்"
     },
     english: {
         businessTitle: "🏪 My Business Details",
@@ -71,13 +81,12 @@ const translations = {
         priceHeader: "Price (₹)",
         totalHeader: "Total (₹)",
         addItemBtnText: "Add Item",
-        updateInvoiceBtnText: "🔄 Update Invoice",
         subtotalLabel: "Subtotal",
         gstLabel: "GST (5%)",
         totalLabel: "Total",
         notesLabel: "Notes",
-        saveBtnText: "💾 Save Invoice & Print",
-        updateBtnText: "🔄 Update & Print",
+        saveBtnText: "💾 Save Invoice",
+        updateBtnText: "🔄 Update Invoice",
         cancelEditText: "❌ Cancel",
         historyTitle: "📄 My Invoices",
         noInvoicesText: "No invoices yet. Create your first invoice above!",
@@ -99,44 +108,53 @@ const translations = {
         syncText: "Syncing...",
         syncSuccess: "✅ Invoice saved successfully!",
         noItemAlert: "⚠️ Please add at least one item!",
-        clearConfirm: "⚠️ WARNING: This will delete ALL your invoices from this browser!\n\nContinue?"
+        clearConfirm: "⚠️ WARNING: This will delete ALL your invoices from this browser!\n\nContinue?",
+        settingsTitle: "Settings",
+        themeTitle: "🎨 Theme Color",
+        dataTitle: "🗑️ Data Management",
+        clearDataBtn: "Clear All My Data",
+        aboutTitle: "ℹ️ About",
+        aboutText: "Hosur Invoice - Free invoice generator for small businesses",
+        showQRBtnText: "Show QR",
+        qrUploadTitle: "Payment QR Code",
+        uploadQRBtn: "Upload QR",
+        removeQRBtn: "Remove QR",
+        paymentQRTitle: "Scan to Pay"
     }
 };
 
-// Apply translations
 function applyTranslations() {
     const t = translations[currentLanguage];
-    
     const elements = ['businessTitle', 'businessNameLabel', 'businessContactLabel', 'invoicePrefixLabel', 
         'nextInvoiceLabel', 'createInvoiceTitle', 'customerNameLabel', 'customerMobileLabel', 'itemsLabel',
         'itemNameHeader', 'qtyHeader', 'priceHeader', 'totalHeader', 'addItemBtnText', 'subtotalLabel',
-        'gstLabel', 'totalLabel', 'notesLabel', 'historyTitle', 'noInvoicesText',
-        'clearBtnText', 'refreshBtnText', 'tipText'];
+        'gstLabel', 'totalLabel', 'notesLabel', 'historyTitle', 'noInvoicesText', 'settingsTitle', 
+        'themeTitle', 'dataTitle', 'clearDataBtn', 'aboutTitle', 'aboutText', 'showQRBtnText',
+        'qrUploadTitle', 'uploadQRBtn', 'removeQRBtn', 'paymentQRTitle'];
     
     elements.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.textContent = t[id];
     });
     
-    // Update save button text based on editing mode
     updateSaveButtonText();
     
-    // Placeholders
-    const businessNameInput = document.getElementById('businessName');
-    const businessContactInput = document.getElementById('businessContact');
-    const customerNameInput = document.getElementById('customerName');
-    const customerMobileInput = document.getElementById('customerMobile');
-    const tamilNotesInput = document.getElementById('tamilNotes');
+    const placeholders = {
+        businessName: t.businessNamePlaceholder,
+        businessContact: t.businessContactPlaceholder,
+        customerName: t.customerNamePlaceholder,
+        customerMobile: t.customerMobilePlaceholder,
+        tamilNotes: t.notesPlaceholder
+    };
     
-    if (businessNameInput) businessNameInput.placeholder = t.businessNamePlaceholder;
-    if (businessContactInput) businessContactInput.placeholder = t.businessContactPlaceholder;
-    if (customerNameInput) customerNameInput.placeholder = t.customerNamePlaceholder;
-    if (customerMobileInput) customerMobileInput.placeholder = t.customerMobilePlaceholder;
-    if (tamilNotesInput) tamilNotesInput.placeholder = t.notesPlaceholder;
+    for (const [id, placeholder] of Object.entries(placeholders)) {
+        const el = document.getElementById(id);
+        if (el) el.placeholder = placeholder;
+    }
     
-    document.getElementById('langBtnText').textContent = currentLanguage === 'tamil' ? 'English' : 'தமிழ்';
+    const langBtn = document.getElementById('langBtnText');
+    if (langBtn) langBtn.textContent = currentLanguage === 'tamil' ? 'English' : 'தமிழ்';
     
-    // Update all item row placeholders
     document.querySelectorAll('.item-name').forEach(input => {
         input.placeholder = t.itemNamePlaceholder;
     });
@@ -146,29 +164,27 @@ function updateSaveButtonText() {
     const saveBtnSpan = document.getElementById('saveBtnText');
     const t = translations[currentLanguage];
     if (editingInvoiceId) {
-        saveBtnSpan.textContent = t.updateBtnText || "🔄 Update & Print";
-        // Change button color when editing
+        saveBtnSpan.textContent = t.updateBtnText;
         const saveBtn = document.getElementById('saveInvoiceBtn');
         if (saveBtn) {
             saveBtn.classList.remove('btn-primary');
             saveBtn.classList.add('bg-orange-500', 'hover:bg-orange-600');
         }
-        // Show cancel button
         let cancelBtn = document.getElementById('cancelEditBtn');
         if (!cancelBtn) {
-            const buttonContainer = document.querySelector('#saveInvoiceBtn')?.parentElement;
-            if (buttonContainer) {
+            const container = document.getElementById('saveInvoiceBtn')?.parentElement;
+            if (container) {
                 cancelBtn = document.createElement('button');
                 cancelBtn.id = 'cancelEditBtn';
                 cancelBtn.className = 'bg-gray-500 text-white px-4 py-3 rounded-xl font-bold text-sm md:text-base mt-2 w-full transition active:scale-98 flex items-center justify-center gap-2';
                 cancelBtn.innerHTML = `<i class="fas fa-times"></i> <span>${t.cancelEditText}</span>`;
                 cancelBtn.onclick = cancelEdit;
-                buttonContainer.appendChild(cancelBtn);
+                container.appendChild(cancelBtn);
             }
         } else {
             cancelBtn.style.display = 'flex';
-            const cancelSpan = cancelBtn.querySelector('span');
-            if (cancelSpan) cancelSpan.textContent = t.cancelEditText;
+            const span = cancelBtn.querySelector('span');
+            if (span) span.textContent = t.cancelEditText;
         }
     } else {
         saveBtnSpan.textContent = t.saveBtnText;
@@ -186,20 +202,15 @@ function cancelEdit() {
     editingInvoiceId = null;
     clearInvoiceForm();
     updateSaveButtonText();
-    showToast(editingInvoiceId ? 'Edit cancelled' : 'Ready for new invoice', 'info');
-    // Change title back
     const titleSpan = document.getElementById('createInvoiceTitle');
-    if (titleSpan) {
-        titleSpan.textContent = translations[currentLanguage].createInvoiceTitle;
-    }
+    if (titleSpan) titleSpan.textContent = translations[currentLanguage].createInvoiceTitle;
+    showToast('Edit cancelled', 'info');
 }
 
 function clearInvoiceForm() {
     document.getElementById('customerName').value = '';
     document.getElementById('customerMobile').value = '';
-    document.getElementById('tamilNotes').value = translations[currentLanguage].notesPlaceholder || 'நன்றி! மீண்டும் வருக';
-    
-    // Clear all items and add one empty row
+    document.getElementById('tamilNotes').value = translations[currentLanguage].notesPlaceholder;
     const tbody = document.getElementById('itemsTable');
     if (tbody) {
         tbody.innerHTML = '';
@@ -223,10 +234,10 @@ function showToast(message, type = 'info') {
     setTimeout(() => toast.remove(), 2000);
 }
 
-// Initialize IndexedDB
+// IndexedDB Functions
 async function initDB() {
     return new Promise((resolve, reject) => {
-        const request = indexedDB.open('HosurInvoiceDB', 2);
+        const request = indexedDB.open('HosurInvoiceDB', 3);
         request.onerror = () => reject(request.error);
         request.onsuccess = () => {
             db = request.result;
@@ -244,16 +255,13 @@ async function initDB() {
                 db.createObjectStore('business', { keyPath: 'id' });
             }
             if (!db.objectStoreNames.contains('businessNames')) {
-                const businessStore = db.createObjectStore('businessNames', { keyPath: 'name' });
-                businessStore.createIndex('count', 'count');
+                db.createObjectStore('businessNames', { keyPath: 'name' });
             }
             if (!db.objectStoreNames.contains('itemNames')) {
-                const itemStore = db.createObjectStore('itemNames', { keyPath: 'name' });
-                itemStore.createIndex('count', 'count');
+                db.createObjectStore('itemNames', { keyPath: 'name' });
             }
             if (!db.objectStoreNames.contains('customerNames')) {
-                const customerStore = db.createObjectStore('customerNames', { keyPath: 'name' });
-                customerStore.createIndex('count', 'count');
+                db.createObjectStore('customerNames', { keyPath: 'name' });
             }
         };
     });
@@ -263,7 +271,7 @@ async function loadAutoCompleteData() {
     try {
         const businessNames = await getAllFromStore('businessNames');
         const itemNames = await getAllFromStore('itemNames');
-        console.log(`📝 Loaded ${businessNames.length} business, ${itemNames.length} items`);
+        console.log(`Loaded ${businessNames.length} business, ${itemNames.length} items`);
     } catch (error) {
         console.error('Error loading auto-complete:', error);
     }
@@ -325,7 +333,6 @@ function createAutoComplete(inputElement, suggestions, onSelect) {
     const dropdown = document.createElement('div');
     dropdown.id = `dropdown_${inputElement.id}`;
     dropdown.className = 'fixed z-50 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto';
-    
     const rect = inputElement.getBoundingClientRect();
     dropdown.style.top = `${rect.bottom + window.scrollY}px`;
     dropdown.style.left = `${rect.left + window.scrollX}px`;
@@ -369,11 +376,12 @@ function getDigitalFootprint() {
     return footprint;
 }
 
+// CRUD Operations
 async function saveInvoiceToDB(invoice) {
     return new Promise((resolve, reject) => {
         const tx = db.transaction(['invoices'], 'readwrite');
         const store = tx.objectStore('invoices');
-        const request = store.put(invoice); // Use put for both add and update
+        const request = store.put(invoice);
         request.onsuccess = () => resolve();
         request.onerror = () => reject(request.error);
     });
@@ -547,21 +555,19 @@ function initializeFirstRow() {
     addItemRow();
 }
 
-// Load invoice data into form for editing
+// Edit Invoice - Load data into form
 async function editInvoice(invoiceId) {
     const invoice = await getInvoiceById(invoiceId);
     if (!invoice) return;
     
     editingInvoiceId = invoiceId;
     
-    // Load business info
     document.getElementById('businessName').value = invoice.businessName;
     document.getElementById('businessContact').value = invoice.businessContact;
     document.getElementById('customerName').value = invoice.customerName;
     document.getElementById('customerMobile').value = invoice.customerMobile || '';
     document.getElementById('tamilNotes').value = invoice.tamilNotes;
     
-    // Load items
     const tbody = document.getElementById('itemsTable');
     tbody.innerHTML = '';
     itemCounter = 0;
@@ -596,42 +602,28 @@ async function editInvoice(invoiceId) {
         addRowEventListeners(newRow, rowId);
     });
     
-    // Add one empty row if no items
-    if (invoice.items.length === 0) {
-        addItemRow();
-    }
-    
+    if (invoice.items.length === 0) addItemRow();
     calculateAllTotals();
     
-    // Update UI
     const titleSpan = document.getElementById('createInvoiceTitle');
-    if (titleSpan) {
-        titleSpan.textContent = translations[currentLanguage].editInvoiceTitle;
-    }
+    if (titleSpan) titleSpan.textContent = translations[currentLanguage].editInvoiceTitle;
     updateSaveButtonText();
-    
-    // Scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    
     showToast(`Editing invoice ${invoice.invoiceNo}`, 'info');
 }
 
-// Delete invoice
+// Delete Invoice
 async function deleteInvoice(invoiceId) {
     const t = translations[currentLanguage];
     if (confirm(t.confirmDelete)) {
         await deleteInvoiceFromDB(invoiceId);
         await loadInvoices();
         showToast(t.deleteSuccess, 'success');
-        
-        // If we were editing this invoice, clear form
-        if (editingInvoiceId === invoiceId) {
-            cancelEdit();
-        }
+        if (editingInvoiceId === invoiceId) cancelEdit();
     }
 }
 
-// Save or Update invoice
+// Save or Update Invoice
 async function saveInvoice() {
     const businessName = document.getElementById('businessName').value || 'My Business';
     const businessContact = document.getElementById('businessContact').value || 'Contact Info';
@@ -676,7 +668,6 @@ async function saveInvoice() {
     let invoice;
     
     if (editingInvoiceId) {
-        // Update existing invoice
         const existingInvoice = await getInvoiceById(editingInvoiceId);
         invoice = {
             ...existingInvoice,
@@ -689,7 +680,6 @@ async function saveInvoice() {
         editingInvoiceId = null;
         cancelEdit();
     } else {
-        // Create new invoice
         const invoiceNo = await getNextInvoiceNumber();
         invoice = {
             id: Date.now(), invoiceNo, date, businessName, businessContact,
@@ -698,30 +688,17 @@ async function saveInvoice() {
             tamilNotes, footprint: getDigitalFootprint(), timestamp: new Date().toISOString()
         };
         await saveInvoiceToDB(invoice);
-        
-        // Clear customer fields but KEEP items for next invoice
         document.getElementById('customerName').value = '';
         document.getElementById('customerMobile').value = '';
-        
         const nextNum = await getNextInvoiceNumber();
         document.getElementById('nextInvoiceNumber').innerText = nextNum;
-        
         showToast(t.syncSuccess, 'success');
     }
     
     await saveBusinessInfo({ businessName, businessContact });
     await loadInvoices();
     generatePrintPDF(invoice);
-    
     if (typeof syncToServer === 'function') syncToServer();
-    
-    const statusDiv = document.getElementById('syncStatus');
-    if (statusDiv) {
-        statusDiv.innerHTML = `<i class="fas fa-check-circle text-green-600"></i> <span>${t.syncSuccess}</span>`;
-        setTimeout(() => {
-            statusDiv.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> <span>${t.syncText}</span>`;
-        }, 3000);
-    }
 }
 
 function generatePrintPDF(invoice) {
@@ -779,36 +756,32 @@ async function loadInvoices() {
     if (countSpan) countSpan.innerText = `(${invoices.length})`;
     
     if (invoices.length === 0) {
-        if (container) container.innerHTML = `<div class="text-center text-gray-500 py-6 md:py-8">
-            <i class="fas fa-file-invoice text-3xl md:text-4xl mb-2 opacity-50"></i>
-            <p class="text-sm md:text-base">${t.noInvoicesText}</p></div>`;
+        container.innerHTML = `<div class="text-center text-gray-500 py-8"><i class="fas fa-file-invoice text-4xl mb-2 opacity-50"></i><p>${t.noInvoicesText}</p></div>`;
         return;
     }
     
     const sortedInvoices = invoices.sort((a, b) => b.id - a.id);
     container.innerHTML = sortedInvoices.map(inv => `
-        <div class="invoice-item border rounded-xl p-2 md:p-3 hover:shadow-md transition bg-white">
+        <div class="invoice-item border rounded-xl p-3 hover:shadow-md transition bg-white">
             <div class="flex flex-wrap justify-between items-center gap-2">
-                <div class="flex flex-wrap items-center gap-2 flex-1">
-                    <span class="font-bold text-blue-700 text-sm md:text-base">${inv.invoiceNo}</span>
-                    <span class="text-gray-600 text-xs md:text-sm">${escapeHtml(inv.customerName)}</span>
-                </div>
                 <div class="flex flex-wrap items-center gap-2">
-                    <span class="font-bold text-green-700 text-sm md:text-base">₹${inv.total}</span>
-                    <span class="text-[10px] md:text-xs text-gray-500">${inv.date}</span>
+                    <span class="font-bold text-blue-700">${inv.invoiceNo}</span>
+                    <span class="text-gray-600">${escapeHtml(inv.customerName)}</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="font-bold text-green-700">₹${inv.total}</span>
+                    <span class="text-xs text-gray-500">${inv.date}</span>
                 </div>
             </div>
-            <div class="text-[10px] md:text-xs text-gray-400 mt-1">
-                ${inv.items.length} item(s) | ${escapeHtml(inv.items[0]?.name || '')}${inv.items.length > 1 ? ` +${inv.items.length - 1} more` : ''}
-            </div>
-            <div class="flex gap-2 mt-2 pt-2 border-t">
-                <button onclick="viewInvoiceDetails(${inv.id})" class="flex-1 bg-blue-500 text-white px-2 py-1 rounded-lg text-xs hover:bg-blue-600 transition">
+            <div class="text-xs text-gray-400 mt-1">${inv.items.length} item(s) | ${escapeHtml(inv.items[0]?.name || '')}${inv.items.length > 1 ? ` +${inv.items.length - 1} more` : ''}</div>
+            <div class="flex gap-2 mt-3 pt-2 border-t">
+                <button onclick="viewInvoiceDetails(${inv.id})" class="flex-1 bg-blue-500 text-white px-2 py-1.5 rounded-lg text-xs hover:bg-blue-600 transition">
                     <i class="fas fa-eye"></i> ${t.viewBtnText}
                 </button>
-                <button onclick="editInvoice(${inv.id})" class="flex-1 bg-yellow-500 text-white px-2 py-1 rounded-lg text-xs hover:bg-yellow-600 transition">
+                <button onclick="editInvoice(${inv.id})" class="flex-1 bg-yellow-500 text-white px-2 py-1.5 rounded-lg text-xs hover:bg-yellow-600 transition">
                     <i class="fas fa-edit"></i> ${t.editBtnText}
                 </button>
-                <button onclick="deleteInvoice(${inv.id})" class="flex-1 bg-red-500 text-white px-2 py-1 rounded-lg text-xs hover:bg-red-600 transition">
+                <button onclick="deleteInvoice(${inv.id})" class="flex-1 bg-red-500 text-white px-2 py-1.5 rounded-lg text-xs hover:bg-red-600 transition">
                     <i class="fas fa-trash"></i> ${t.deleteBtnText}
                 </button>
             </div>
@@ -835,13 +808,11 @@ async function clearAllData() {
         tx.objectStore('itemNames').clear();
         tx.objectStore('customerNames').clear();
         await tx.done;
-        
         cancelEdit();
         document.getElementById('customerName').value = '';
         document.getElementById('customerMobile').value = '';
         document.getElementById('businessName').value = '';
         document.getElementById('businessContact').value = '';
-        
         initializeFirstRow();
         await loadInvoices();
         calculateAllTotals();
@@ -884,7 +855,7 @@ async function setupCustomerNameAutoComplete() {
     });
 }
 
-// Auto-save business info
+// Event Listeners
 document.getElementById('businessName')?.addEventListener('input', async (e) => {
     const info = await loadBusinessInfo();
     info.businessName = e.target.value;
@@ -920,7 +891,7 @@ document.getElementById('invoicePrefix')?.addEventListener('change', async (e) =
         calculateAllTotals();
         await setupBusinessNameAutoComplete();
         await setupCustomerNameAutoComplete();
-        console.log('✅ Hosur Invoice Bill Ready | CRUD Operations Enabled');
+        console.log('✅ Hosur Invoice Bill Ready | Full CRUD Operations Enabled');
     } catch (error) {
         console.error('Init error:', error);
         alert('Error loading app. Please refresh.');
