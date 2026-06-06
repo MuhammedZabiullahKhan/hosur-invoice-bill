@@ -6,6 +6,74 @@ let currentLanguage = 'tamil';
 let itemCounter = 0;
 let editingInvoiceId = null;
 
+// GST Settings
+let gstEnabled = false;
+let gstPercentage = 0;
+
+// Load GST settings from localStorage
+function loadGSTSettings() {
+    const savedGSTEnabled = localStorage.getItem('gstEnabled');
+    const savedGSTPercentage = localStorage.getItem('gstPercentage');
+    
+    gstEnabled = savedGSTEnabled === 'true';
+    gstPercentage = savedGSTPercentage ? parseFloat(savedGSTPercentage) : 0;
+    
+    // Update UI
+    const gstToggle = document.getElementById('gstToggle');
+    const gstPercentageDiv = document.getElementById('gstPercentageDiv');
+    const gstPercentageInput = document.getElementById('gstPercentage');
+    const gstInfoText = document.getElementById('gstInfoText');
+    const gstLabel = document.getElementById('gstLabel');
+    
+    if (gstToggle) gstToggle.checked = gstEnabled;
+    if (gstPercentageDiv) gstPercentageDiv.style.display = gstEnabled ? 'block' : 'none';
+    if (gstPercentageInput) gstPercentageInput.value = gstPercentage;
+    if (gstInfoText) {
+        if (gstEnabled) {
+            gstInfoText.textContent = `Current GST: ${gstPercentage}% (Enabled)`;
+        } else {
+            gstInfoText.textContent = `Current GST: Disabled (0%)`;
+        }
+    }
+    if (gstLabel) {
+        if (gstEnabled) {
+            gstLabel.textContent = `GST (${gstPercentage}%)`;
+        } else {
+            gstLabel.textContent = `GST`;
+        }
+    }
+}
+
+function toggleGST() {
+    const gstToggle = document.getElementById('gstToggle');
+    const gstPercentageDiv = document.getElementById('gstPercentageDiv');
+    gstEnabled = gstToggle.checked;
+    gstPercentageDiv.style.display = gstEnabled ? 'block' : 'none';
+    saveGSTSettings();
+}
+
+function saveGSTSettings() {
+    const gstPercentageInput = document.getElementById('gstPercentage');
+    gstPercentage = parseFloat(gstPercentageInput.value) || 0;
+    
+    localStorage.setItem('gstEnabled', gstEnabled);
+    localStorage.setItem('gstPercentage', gstPercentage);
+    
+    const gstInfoText = document.getElementById('gstInfoText');
+    const gstLabel = document.getElementById('gstLabel');
+    
+    if (gstEnabled) {
+        if (gstInfoText) gstInfoText.textContent = `Current GST: ${gstPercentage}% (Enabled)`;
+        if (gstLabel) gstLabel.textContent = `GST (${gstPercentage}%)`;
+    } else {
+        if (gstInfoText) gstInfoText.textContent = `Current GST: Disabled (0%)`;
+        if (gstLabel) gstLabel.textContent = `GST`;
+    }
+    
+    calculateAllTotals();
+    showToast(translations[currentLanguage].gstSaved || `GST settings saved: ${gstEnabled ? gstPercentage + '%' : 'Disabled'}`);
+}
+
 // Complete Translations
 const translations = {
     tamil: {
@@ -48,7 +116,7 @@ const translations = {
         
         // Summary
         subtotal: "துணை மொத்தம்",
-        gst: "ஜிஎஸ்டி (5%)",
+        gst: "ஜிஎஸ்டி",
         grandTotal: "மொத்தம்",
         
         // Notes
@@ -68,6 +136,10 @@ const translations = {
         paymentQRTitle: "உங்கள் கட்டண QR குறியீடு",
         paymentQRDesc: "உங்கள் GPay/PhonePe/Paytm QR ஐ பதிவேற்றவும்",
         themeTitle: "🎨 வண்ண தீம்",
+        gstTitle: "ஜிஎஸ்டி அமைப்புகள்",
+        gstToggleLabel: "ஜிஎஸ்டி செயல்படுத்துக",
+        gstPercentLabel: "ஜிஎஸ்டி சதவீதம் (%)",
+        gstSaved: "ஜிஎஸ்டி அமைப்புகள் சேமிக்கப்பட்டன",
         dataTitle: "🗑️ தரவு மேலாண்மை",
         aboutTitle: "ℹ️ பற்றி",
         aboutText: "ஹொசூர் இன்வாய்ஸ் பில் - சிறு வணிகங்களுக்கான இலவச இன்வாய்ஸ் ஜெனரேட்டர்",
@@ -88,7 +160,7 @@ const translations = {
         notesPlaceholder: "நன்றி! மீண்டும் வருக",
         
         // Tips
-        tipText: "💡 குறிப்பு: தட்டச்சு செய்ய ஆரம்பித்தால் பரிந்துரைகள் வரும்!",
+        tipText: "💡 குறிப்பு: தட்டச்சு செய்ய ஆரம்பித்தால் பரிந்துரைகள் வரும்! ஜிஎஸ்டியை அமைப்புகளில் மாற்றலாம்",
         
         // Alerts
         confirmDelete: "இந்த இன்வாய்ஸை நீக்க வேண்டுமா?",
@@ -142,7 +214,7 @@ const translations = {
         
         // Summary
         subtotal: "Subtotal",
-        gst: "GST (5%)",
+        gst: "GST",
         grandTotal: "Total",
         
         // Notes
@@ -162,6 +234,10 @@ const translations = {
         paymentQRTitle: "Your Payment QR Code",
         paymentQRDesc: "Upload your GPay/PhonePe/Paytm QR code",
         themeTitle: "🎨 Theme Color",
+        gstTitle: "GST Settings",
+        gstToggleLabel: "Enable GST",
+        gstPercentLabel: "GST Percentage (%)",
+        gstSaved: "GST settings saved",
         dataTitle: "🗑️ Data Management",
         aboutTitle: "ℹ️ About",
         aboutText: "Hosur Invoice Bill - Free invoice generator for small businesses",
@@ -182,7 +258,7 @@ const translations = {
         notesPlaceholder: "Thank you! Visit again",
         
         // Tips
-        tipText: "💡 Tip: Start typing - auto suggestions appear!",
+        tipText: "💡 Tip: Start typing - auto suggestions appear! Configure GST in Settings",
         
         // Alerts
         confirmDelete: "Are you sure you want to delete this invoice?",
@@ -238,7 +314,11 @@ function applyTranslations() {
     
     // Summary
     setText('subtotalLabel', t.subtotal);
-    setText('gstLabel', t.gst);
+    if (gstEnabled) {
+        setText('gstLabel', `${t.gst} (${gstPercentage}%)`);
+    } else {
+        setText('gstLabel', t.gst);
+    }
     setText('totalLabel', t.grandTotal);
     
     // Notes
@@ -248,16 +328,14 @@ function applyTranslations() {
     setText('historyTitle', t.historyTitle);
     setText('noInvoicesText', t.noInvoices);
     
-    // Action buttons on invoices
-    document.querySelectorAll('.view-btn-text').forEach(el => el.textContent = t.view);
-    document.querySelectorAll('.edit-btn-text').forEach(el => el.textContent = t.edit);
-    document.querySelectorAll('.delete-btn-text').forEach(el => el.textContent = t.delete);
-    
     // Settings Panel
     setText('settingsTitle', t.settingsTitle);
     setText('qrUploadTitle', t.paymentQRTitle);
     setText('qrUploadDesc', t.paymentQRDesc);
     setText('themeTitle', t.themeTitle);
+    setText('gstTitle', t.gstTitle);
+    setText('gstToggleLabel', t.gstToggleLabel);
+    setText('gstPercentLabel', t.gstPercentLabel);
     setText('dataTitle', t.dataTitle);
     setText('aboutTitle', t.aboutTitle);
     setText('aboutText', t.aboutText);
@@ -609,11 +687,19 @@ function calculateAllTotals() {
         if (totalSpan) totalSpan.textContent = total.toFixed(2);
         subtotal += total;
     });
-    const gst = subtotal * 0.05;
-    const total = subtotal + gst;
+    
+    let gst = 0;
+    let total = subtotal;
+    
+    if (gstEnabled && gstPercentage > 0) {
+        gst = subtotal * (gstPercentage / 100);
+        total = subtotal + gst;
+    }
+    
     document.getElementById('subtotal').textContent = subtotal.toFixed(2);
     document.getElementById('gstAmount').textContent = gst.toFixed(2);
     document.getElementById('grandTotal').textContent = total.toFixed(2);
+    
     return { subtotal, gst, total };
 }
 
@@ -827,8 +913,10 @@ function generatePrintPDF(invoice) {
             <div class="header"><h2>${escapeHtml(invoice.businessName)}</h2><p>${escapeHtml(invoice.businessContact)}</p><h3>TAX INVOICE</h3></div>
             <div><strong>Invoice No:</strong> ${invoice.invoiceNo}<br><strong>Date:</strong> ${invoice.date}</div>
             <div class="customer-details"><strong>Customer:</strong> ${escapeHtml(invoice.customerName)}<br>${invoice.customerMobile ? `<strong>Mobile:</strong> ${invoice.customerMobile}` : ''}</div>
-            <table><thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead><tbody>${itemsHtml}</tbody></table>
-            <div style="text-align:right;"><p>Subtotal: ₹${invoice.subtotal}</p><p>GST (5%): ₹${invoice.gst}</p><h3>Total: ₹${invoice.total}</h3></div>
+            <tr><thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead><tbody>${itemsHtml}</tbody></table>
+            <div style="text-align:right;"><p>Subtotal: ₹${invoice.subtotal}</p>
+            <p>${gstEnabled ? `GST (${gstPercentage}%): ₹${invoice.gst}` : 'GST: 0%'}</p>
+            <h3>Total: ₹${invoice.total}</h3></div>
             <div class="footer"><p>${escapeHtml(invoice.tamilNotes)}</p><p>Powered by Hosur Invoice Bill</p></div>
         </div>
         <script>window.print();setTimeout(()=>window.close(),1000);<\/script>
@@ -972,10 +1060,13 @@ async function init() {
         const nextNum = await getNextInvoiceNumber();
         document.getElementById('nextInvoiceNumber').textContent = nextNum;
         
+        // Load GST settings
+        loadGSTSettings();
+        
         // Apply translations after everything is loaded
         applyTranslations();
         
-        console.log('✅ Hosur Invoice Bill Ready!');
+        console.log('✅ Hosur Invoice Bill Ready! GST Configurable');
     } catch (error) {
         console.error('Init error:', error);
     }
@@ -997,6 +1088,8 @@ window.editInvoice = editInvoice;
 window.deleteInvoice = deleteInvoice;
 window.viewInvoiceDetails = viewInvoiceDetails;
 window.clearAllData = clearAllData;
+window.toggleGST = toggleGST;
+window.saveGSTSettings = saveGSTSettings;
 
 // Start the app
 init();
