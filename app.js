@@ -1,11 +1,12 @@
 // Hosur Invoice Bill - Complete Application
 // Created by Shri Muhammed Zabiullah Khan
-// Direct PDF Generation - Mobile Friendly
+// Preview First, Then Print - Print button hides during print
 
 let db;
 let currentLanguage = 'tamil';
 let itemCounter = 0;
 let editingInvoiceId = null;
+let previewWindow = null;
 
 // GST Settings
 let gstEnabled = false;
@@ -78,7 +79,7 @@ function saveGSTSettings() {
     showToast(msg);
 }
 
-// Complete Translations - 100% Tamil & 100% English
+// Complete Translations
 const translations = {
     tamil: {
         appTitle: "🏪 ஹொசூர் இன்வாய்ஸ் பில்",
@@ -106,17 +107,17 @@ const translations = {
         gst: "ஜிஎஸ்டி",
         grandTotal: "மொத்தம்",
         notes: "குறிப்புகள் (தமிழ்)",
-        saveInvoice: "💾 இன்வாய்ஸ் சேமி & PDF",
-        updateInvoice: "🔄 இன்வாய்ஸ் புதுப்பி & PDF",
+        saveInvoice: "💾 இன்வாய்ஸ் சேமி & முன்னோட்டம்",
+        updateInvoice: "🔄 இன்வாய்ஸ் புதுப்பி & முன்னோட்டம்",
         cancelEdit: "ரத்து செய்",
         historyTitle: "📄 என் இன்வாய்ஸ்கள்",
-        noInvoices: "இன்னும் இன்வாய்ஸ் இல்லை. மேலே உங்கள் முதல் இன்வாய்ஸ் உருவாக்கவும்!",
-        view: "PDF காண்க",
+        noInvoices: "இன்னும் இன்வாய்ஸ் இல்லை",
+        view: "PDF முன்னோட்டம்",
         edit: "திருத்து",
         delete: "நீக்கு",
         settingsTitle: "அமைப்புகள்",
-        paymentQRTitle: "உங்கள் கட்டண QR குறியீடு",
-        paymentQRDesc: "உங்கள் ஜிபே/போன்பே/பேட்டிஎம் QR ஐ பதிவேற்றவும்",
+        paymentQRTitle: "உங்கள் கட்டண QR",
+        paymentQRDesc: "GPay/PhonePe/Paytm QR பதிவேற்றுக",
         uploadQR: "QR பதிவேற்று",
         removeQR: "QR நீக்கு",
         themeTitle: "🎨 வண்ண தீம்",
@@ -126,33 +127,34 @@ const translations = {
         saveGSTBtn: "ஜிஎஸ்டி சேமி",
         dataTitle: "🗑️ தரவு மேலாண்மை",
         clearDataBtn: "எல்லா தரவையும் அழிக்க",
-        clearWarning: "எச்சரிக்கை: இது உங்கள் எல்லா இன்வாய்ஸ்களையும் நீக்கும்",
+        clearWarning: "எச்சரிக்கை: அனைத்து இன்வாய்ஸ்களையும் நீக்கும்",
         aboutTitle: "ℹ️ பற்றி",
-        aboutText: "ஹொசூர் இன்வாய்ஸ் பில் - சிறு வணிகங்களுக்கான இலவச இன்வாய்ஸ் ஜெனரேட்டர்",
+        aboutText: "ஹொசூர் இன்வாய்ஸ் பில் - இலவச இன்வாய்ஸ் ஜெனரேட்டர்",
         scanToPay: "ஸ்கேன் செய்து பணம் செலுத்துங்கள்",
-        scanInstruction: "ஜிபே, போன்பே, அல்லது பேட்டிஎம் மூலம் ஸ்கேன் செய்யவும்",
+        scanInstruction: "GPay, PhonePe, Paytm மூலம் ஸ்கேன் செய்யவும்",
         close: "மூடு",
-        noQR: "கட்டண QR இல்லை. அமைப்புகளில் சேர்க்கவும்.",
-        businessNamePlaceholder: "உதாரணம்: ஷ்ரீ முஹம்மது சன்ஸ்",
-        businessContactPlaceholder: "தொலைபேசி: 9876543210, ஹொசூர் மெயின் ரோடு",
-        customerNamePlaceholder: "உதாரணம்: ராஜேஷ் டெக்ஸ்டைல்ஸ்",
-        customerMobilePlaceholder: "உதாரணம்: 9876543210",
-        itemNamePlaceholder: "பொருள் பெயர் (உதாரணம்: அரிசி 5கிலோ)",
+        noQR: "கட்டண QR இல்லை",
+        businessNamePlaceholder: "உதா: ஷ்ரீ முஹம்மது சன்ஸ்",
+        businessContactPlaceholder: "தொலை: 9876543210, ஹொசூர் மெயின் ரோடு",
+        customerNamePlaceholder: "உதா: ராஜேஷ் டெக்ஸ்டைல்ஸ்",
+        customerMobilePlaceholder: "உதா: 9876543210",
+        itemNamePlaceholder: "பொருள் பெயர் (உதா: அரிசி 5கிலோ)",
         notesPlaceholder: "நன்றி! மீண்டும் வருக",
-        tipText: "💡 குறிப்பு: தட்டச்சு செய்ய ஆரம்பித்தால் பரிந்துரைகள் வரும்! ஜிஎஸ்டியை அமைப்புகளில் மாற்றலாம்",
+        tipText: "💡 குறிப்பு: தட்டச்சு செய்ய ஆரம்பித்தால் பரிந்துரைகள் வரும்!",
         syncReady: "தயார்",
         confirmDelete: "இந்த இன்வாய்ஸை நீக்க வேண்டுமா?",
         deleteSuccess: "✅ இன்வாய்ஸ் நீக்கப்பட்டது!",
         updateSuccess: "✅ இன்வாய்ஸ் புதுப்பிக்கப்பட்டது!",
         saveSuccess: "✅ இன்வாய்ஸ் சேமிக்கப்பட்டது!",
-        noItemAlert: "⚠️ தயவுசெய்து குறைந்தது ஒரு பொருளையாவது சேர்க்கவும்!",
-        clearConfirm: "⚠️ எச்சரிக்கை: இது உங்கள் உலாவியில் உள்ள அனைத்து இன்வாய்ஸ்களையும் நீக்கும்!\n\nதொடரவா?",
+        noItemAlert: "⚠️ குறைந்தது ஒரு பொருளையாவது சேர்க்கவும்!",
+        clearConfirm: "⚠️ அனைத்து இன்வாய்ஸ்களையும் நீக்க வேண்டுமா?",
         themeChanged: "வண்ண தீம் மாற்றப்பட்டது",
-        qrUploadSuccess: "QR குறியீடு வெற்றிகரமாக பதிவேற்றப்பட்டது!",
-        qrRemoved: "QR குறியீடு நீக்கப்பட்டது",
-        newBillReady: "✅ புதிய பில்லுக்கு தயார்! வாடிக்கையாளர் விவரங்களை உள்ளிடவும்.",
-        pdfSaved: "✅ PDF தயார்! உங்கள் சாதனத்தில் சேமிக்கவும்",
-        pdfOpened: "PDF திறக்கப்பட்டது. இப்போது சேமிக்கவும் அல்லது பகிரவும்"
+        qrUploadSuccess: "QR பதிவேற்றப்பட்டது!",
+        qrRemoved: "QR நீக்கப்பட்டது",
+        newBillReady: "✅ புதிய பில்லுக்கு தயார்!",
+        printPDF: "🖨️ PDF ஆக அச்சிடுக",
+        closePreview: "❌ மூடு",
+        previewTitle: "இன்வாய்ஸ் முன்னோட்டம்"
     },
     english: {
         appTitle: "🏪 Hosur Invoice Bill",
@@ -180,17 +182,17 @@ const translations = {
         gst: "GST",
         grandTotal: "Total",
         notes: "Notes",
-        saveInvoice: "💾 Save Invoice & PDF",
-        updateInvoice: "🔄 Update Invoice & PDF",
+        saveInvoice: "💾 Save Invoice & Preview",
+        updateInvoice: "🔄 Update Invoice & Preview",
         cancelEdit: "Cancel",
         historyTitle: "📄 My Invoices",
-        noInvoices: "No invoices yet. Create your first invoice above!",
-        view: "View PDF",
+        noInvoices: "No invoices yet",
+        view: "PDF Preview",
         edit: "Edit",
         delete: "Delete",
         settingsTitle: "Settings",
-        paymentQRTitle: "Your Payment QR Code",
-        paymentQRDesc: "Upload your GPay/PhonePe/Paytm QR code",
+        paymentQRTitle: "Your Payment QR",
+        paymentQRDesc: "Upload GPay/PhonePe/Paytm QR",
         uploadQR: "Upload QR",
         removeQR: "Remove QR",
         themeTitle: "🎨 Theme Color",
@@ -200,33 +202,34 @@ const translations = {
         saveGSTBtn: "Save GST",
         dataTitle: "🗑️ Data Management",
         clearDataBtn: "Clear All My Data",
-        clearWarning: "Warning: This will delete all your invoices",
+        clearWarning: "Warning: Deletes all invoices",
         aboutTitle: "ℹ️ About",
-        aboutText: "Hosur Invoice Bill - Free invoice generator for small businesses",
+        aboutText: "Hosur Invoice Bill - Free invoice generator",
         scanToPay: "Scan to Pay",
-        scanInstruction: "Scan with GPay, PhonePe, or Paytm to pay",
+        scanInstruction: "Scan with GPay, PhonePe, or Paytm",
         close: "Close",
-        noQR: "No payment QR uploaded. Please add in settings.",
+        noQR: "No payment QR uploaded",
         businessNamePlaceholder: "Ex: Shri Muhammed Sons",
         businessContactPlaceholder: "Phone: 9876543210, Hosur Main Road",
         customerNamePlaceholder: "Ex: Rajesh Textiles",
         customerMobilePlaceholder: "Ex: 9876543210",
         itemNamePlaceholder: "Item name (Ex: Rice 5kg)",
         notesPlaceholder: "Thank you! Visit again",
-        tipText: "💡 Tip: Start typing - auto suggestions appear! Configure GST in Settings",
+        tipText: "💡 Tip: Start typing - auto suggestions appear!",
         syncReady: "Ready",
-        confirmDelete: "Are you sure you want to delete this invoice?",
+        confirmDelete: "Delete this invoice?",
         deleteSuccess: "✅ Invoice deleted!",
         updateSuccess: "✅ Invoice updated!",
         saveSuccess: "✅ Invoice saved!",
         noItemAlert: "⚠️ Please add at least one item!",
-        clearConfirm: "⚠️ WARNING: This will delete ALL your invoices from this browser!\n\nContinue?",
+        clearConfirm: "⚠️ Delete all invoices?",
         themeChanged: "Theme changed",
-        qrUploadSuccess: "QR code uploaded successfully!",
-        qrRemoved: "QR code removed",
-        newBillReady: "✅ Ready for new bill! Enter customer details.",
-        pdfSaved: "✅ PDF ready! Save to your device",
-        pdfOpened: "PDF opened. Save or share now"
+        qrUploadSuccess: "QR uploaded!",
+        qrRemoved: "QR removed",
+        newBillReady: "✅ Ready for new bill!",
+        printPDF: "🖨️ Print as PDF",
+        closePreview: "❌ Close",
+        previewTitle: "Invoice Preview"
     }
 };
 
@@ -713,8 +716,8 @@ function initializeFirstRow() {
     }
 }
 
-// Direct PDF Generation - Mobile Friendly
-function generatePDFAndDownload(invoice, isEdit = false) {
+// Generate Preview HTML (with Print button that hides during print)
+function generatePreviewHTML(invoice, isEdit = false) {
     const t = translations[currentLanguage];
     
     const itemsHtml = invoice.items.map((item, index) => `
@@ -732,17 +735,13 @@ function generatePDFAndDownload(invoice, isEdit = false) {
     const thankyouText = currentLanguage === 'tamil' ? 'நன்றி! மீண்டும் வருக' : 'Thank you! Visit again';
     const poweredText = currentLanguage === 'tamil' ? 'ஹொசூர் இன்வாய்ஸ் பில் மூலம் இயக்கப்படுகிறது' : 'Powered by Hosur Invoice Bill';
     
-    const printContent = `
+    return `
         <!DOCTYPE html>
         <html>
         <head>
             <meta charset="UTF-8">
             <title>Invoice ${invoice.invoiceNo}</title>
             <style>
-                @media print {
-                    body { margin: 0; padding: 0; }
-                    .no-print { display: none; }
-                }
                 * { margin: 0; padding: 0; box-sizing: border-box; }
                 body {
                     font-family: 'Inter', 'Noto Sans Tamil', Arial, sans-serif;
@@ -750,6 +749,7 @@ function generatePDFAndDownload(invoice, isEdit = false) {
                     padding: 20px;
                     display: flex;
                     justify-content: center;
+                    min-height: 100vh;
                 }
                 .invoice-container {
                     max-width: 900px;
@@ -819,19 +819,50 @@ function generatePDFAndDownload(invoice, isEdit = false) {
                 .totals .grand-total td { font-size: 16px; font-weight: 800; color: #1e3a8a; border-top: 2px solid #cbd5e1; }
                 .notes { padding: 15px 30px; background: white; border-top: 1px solid #e2e8f0; font-style: italic; color: #6b7280; font-size: 12px; }
                 .footer { padding: 12px 30px; background: #f1f5f9; text-align: center; font-size: 10px; color: #64748b; }
-                .download-btn {
-                    display: block;
-                    width: 100%;
-                    max-width: 300px;
-                    margin: 20px auto;
-                    padding: 12px;
-                    background: #10b981;
-                    color: white;
+                .button-container {
+                    padding: 20px 30px;
+                    background: white;
                     text-align: center;
-                    text-decoration: none;
+                    border-top: 1px solid #e2e8f0;
+                }
+                .print-btn {
+                    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                    color: white;
+                    padding: 12px 24px;
+                    border: none;
                     border-radius: 8px;
+                    font-size: 16px;
                     font-weight: bold;
                     cursor: pointer;
+                    margin-right: 10px;
+                    transition: transform 0.2s;
+                }
+                .print-btn:hover { transform: scale(1.02); }
+                .close-btn {
+                    background: #6b7280;
+                    color: white;
+                    padding: 12px 24px;
+                    border: none;
+                    border-radius: 8px;
+                    font-size: 16px;
+                    font-weight: bold;
+                    cursor: pointer;
+                    transition: transform 0.2s;
+                }
+                .close-btn:hover { transform: scale(1.02); }
+                @media print {
+                    .button-container, .print-btn, .close-btn {
+                        display: none !important;
+                    }
+                    body {
+                        background: white;
+                        padding: 0;
+                        margin: 0;
+                    }
+                    .invoice-container {
+                        box-shadow: none;
+                        border-radius: 0;
+                    }
                 }
             </style>
         </head>
@@ -861,28 +892,29 @@ function generatePDFAndDownload(invoice, isEdit = false) {
                 </div>
                 <div class="notes"><p>📝 ${escapeHtml(invoice.tamilNotes || thankyouText)}</p></div>
                 <div class="footer"><p>${thankyouText} | ${poweredText}</p></div>
+                <div class="button-container">
+                    <button class="print-btn" onclick="window.print()">🖨️ ${t.printPDF}</button>
+                    <button class="close-btn" onclick="window.close()">❌ ${t.closePreview}</button>
+                </div>
             </div>
-            <div style="text-align: center; margin-top: 20px;">
-                <button onclick="window.print()" style="background: #1e3a8a; color: white; padding: 10px 20px; border: none; border-radius: 8px; font-size: 16px; cursor: pointer;">
-                    🖨️ ${currentLanguage === 'tamil' ? 'அச்சிடுக / PDF ஆக சேமிக்க' : 'Print / Save as PDF'}
-                </button>
-            </div>
-            <script>
-                // Auto trigger print dialog
-                setTimeout(() => {
-                    window.print();
-                }, 500);
-            </script>
         </body>
         </html>
     `;
+}
+
+// Show Preview Window
+function showPreview(invoice, isEdit = false) {
+    const t = translations[currentLanguage];
+    const htmlContent = generatePreviewHTML(invoice, isEdit);
     
-    // Open print window - this works on all devices including mobile
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write(printContent);
-    printWindow.document.close();
-    
-    showToast(t.pdfOpened);
+    // Open preview window
+    if (previewWindow && !previewWindow.closed) {
+        previewWindow.close();
+    }
+    previewWindow = window.open('', '_blank', 'width=900,height=800,scrollbars=yes,resizable=yes');
+    previewWindow.document.write(htmlContent);
+    previewWindow.document.close();
+    previewWindow.focus();
 }
 
 // Save Invoice - Main Function
@@ -952,8 +984,8 @@ async function saveInvoice() {
     const nextNum = await getNextInvoiceNumber();
     document.getElementById('nextInvoiceNumber').textContent = nextNum;
     
-    // Generate PDF
-    generatePDFAndDownload(invoice, !!editingInvoiceId);
+    // Show preview
+    showPreview(invoice, !!editingInvoiceId);
 }
 
 function escapeHtml(text) {
@@ -1072,7 +1104,7 @@ async function loadInvoices() {
             </div>
             <div class="text-xs text-gray-400 mt-1">${inv.items.length} item(s)</div>
             <div class="flex gap-2 mt-2 pt-2 border-t">
-                <button onclick="viewInvoicePDF(${inv.id})" class="flex-1 bg-blue-500 text-white px-2 py-1 rounded-lg text-xs"><i class="fas fa-file-pdf"></i> ${t.view}</button>
+                <button onclick="viewInvoicePreview(${inv.id})" class="flex-1 bg-blue-500 text-white px-2 py-1 rounded-lg text-xs"><i class="fas fa-eye"></i> ${t.view}</button>
                 <button onclick="editInvoice(${inv.id})" class="flex-1 bg-yellow-500 text-white px-2 py-1 rounded-lg text-xs"><i class="fas fa-edit"></i> ${t.edit}</button>
                 <button onclick="deleteInvoice(${inv.id})" class="flex-1 bg-red-500 text-white px-2 py-1 rounded-lg text-xs"><i class="fas fa-trash"></i> ${t.delete}</button>
             </div>
@@ -1080,10 +1112,10 @@ async function loadInvoices() {
     `).join('');
 }
 
-async function viewInvoicePDF(invoiceId) {
+async function viewInvoicePreview(invoiceId) {
     const invoice = await getInvoiceById(invoiceId);
     if (invoice) {
-        generatePDFAndDownload(invoice);
+        showPreview(invoice);
     }
 }
 
@@ -1187,7 +1219,7 @@ async function init() {
         loadGSTSettings();
         applyTranslations();
         
-        console.log('✅ Hosur Invoice Bill Ready! Direct PDF Generation Active');
+        console.log('✅ Hosur Invoice Bill Ready! Preview First, Then Print');
     } catch (error) {
         console.error('Init error:', error);
     }
@@ -1207,7 +1239,7 @@ window.removeItemRow = removeItemRow;
 window.saveInvoice = saveInvoice;
 window.editInvoice = editInvoice;
 window.deleteInvoice = deleteInvoice;
-window.viewInvoicePDF = viewInvoicePDF;
+window.viewInvoicePreview = viewInvoicePreview;
 window.clearAllData = clearAllData;
 window.toggleGST = toggleGST;
 window.saveGSTSettings = saveGSTSettings;
