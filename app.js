@@ -18,7 +18,6 @@ function loadGSTSettings() {
     gstEnabled = savedGSTEnabled === 'true';
     gstPercentage = savedGSTPercentage ? parseFloat(savedGSTPercentage) : 0;
     
-    // Update UI
     const gstToggle = document.getElementById('gstToggle');
     const gstPercentageDiv = document.getElementById('gstPercentageDiv');
     const gstPercentageInput = document.getElementById('gstPercentage');
@@ -29,18 +28,10 @@ function loadGSTSettings() {
     if (gstPercentageDiv) gstPercentageDiv.style.display = gstEnabled ? 'block' : 'none';
     if (gstPercentageInput) gstPercentageInput.value = gstPercentage;
     if (gstInfoText) {
-        if (gstEnabled) {
-            gstInfoText.textContent = `Current GST: ${gstPercentage}% (Enabled)`;
-        } else {
-            gstInfoText.textContent = `Current GST: Disabled (0%)`;
-        }
+        gstInfoText.textContent = gstEnabled ? `Current GST: ${gstPercentage}% (Enabled)` : `Current GST: Disabled (0%)`;
     }
     if (gstLabel) {
-        if (gstEnabled) {
-            gstLabel.textContent = `GST (${gstPercentage}%)`;
-        } else {
-            gstLabel.textContent = `GST`;
-        }
+        gstLabel.textContent = gstEnabled ? `GST (${gstPercentage}%)` : `GST`;
     }
 }
 
@@ -63,318 +54,198 @@ function saveGSTSettings() {
     const gstLabel = document.getElementById('gstLabel');
     
     if (gstEnabled) {
-        if (gstInfoText) gstInfoText.textContent = `Current GST: ${gstPercentage}% (Enabled)`;
-        if (gstLabel) gstLabel.textContent = `GST (${gstPercentage}%)`;
+        gstInfoText.textContent = `Current GST: ${gstPercentage}% (Enabled)`;
+        gstLabel.textContent = `GST (${gstPercentage}%)`;
     } else {
-        if (gstInfoText) gstInfoText.textContent = `Current GST: Disabled (0%)`;
-        if (gstLabel) gstLabel.textContent = `GST`;
+        gstInfoText.textContent = `Current GST: Disabled (0%)`;
+        gstLabel.textContent = `GST`;
     }
     
     calculateAllTotals();
-    showToast(translations[currentLanguage].gstSaved || `GST settings saved: ${gstEnabled ? gstPercentage + '%' : 'Disabled'}`);
+    showToast(`GST settings saved: ${gstEnabled ? gstPercentage + '%' : 'Disabled'}`);
 }
 
 // Complete Translations
 const translations = {
     tamil: {
-        // Header
         appTitle: "🏪 ஹொசூர் இன்வாய்ஸ் பில்",
         subtitle: "Hosur Invoice Bill",
         createdBy: "by Shri Muhammed Zabiullah Khan",
-        
-        // Buttons
         showQR: "QR காட்டு",
         settings: "அமைப்புகள்",
         newBill: "புதிய பில்",
         addItem: "பொருள் சேர்",
         saveInvoice: "💾 இன்வாய்ஸ் சேமி & அச்சிடு",
         updateInvoice: "🔄 இன்வாய்ஸ் புதுப்பி & அச்சிடு",
-        cancel: "ரத்து செய்",
         uploadQR: "QR பதிவேற்று",
         removeQR: "QR நீக்கு",
         clearAllData: "எல்லா தரவையும் அழிக்க",
-        
-        // Business Section
         businessTitle: "🏪 என் கடை விவரங்கள்",
         businessName: "கடை பெயர்",
         businessContact: "தொடர்பு & முகவரி",
         invoicePrefix: "இன்வாய்ஸ் எண் முறை",
         nextInvoice: "அடுத்த இன்வாய்ஸ் எண்",
-        
-        // Customer Section
         createInvoice: "➕ புதிய இன்வாய்ஸ்",
         editInvoiceTitle: "✏️ இன்வாய்ஸ் திருத்து",
         customerName: "வாடிக்கையாளர் பெயர்",
         customerMobile: "மொபைல் எண்",
-        
-        // Items Section
         itemsLabel: "📦 பொருட்கள்",
         itemName: "பொருள் பெயர்",
         qty: "அளவு",
         price: "விலை (₹)",
         total: "மொத்தம் (₹)",
-        
-        // Summary
         subtotal: "துணை மொத்தம்",
         gst: "ஜிஎஸ்டி",
         grandTotal: "மொத்தம்",
-        
-        // Notes
-        notes: "குறிப்புகள் (தமிழ்)",
-        
-        // History
+        notes: "குறிப்புகள்",
         historyTitle: "📄 என் இன்வாய்ஸ்கள்",
-        noInvoices: "இன்னும் இன்வாய்ஸ் இல்லை. மேலே உங்கள் முதல் இன்வாய்ஸ் உருவாக்கவும்!",
-        
-        // Actions
+        noInvoices: "இன்னும் இன்வாய்ஸ் இல்லை",
         view: "பார்",
         edit: "திருத்து",
         delete: "நீக்கு",
-        
-        // Settings Panel
         settingsTitle: "அமைப்புகள்",
-        paymentQRTitle: "உங்கள் கட்டண QR குறியீடு",
-        paymentQRDesc: "உங்கள் GPay/PhonePe/Paytm QR ஐ பதிவேற்றவும்",
+        paymentQRTitle: "உங்கள் கட்டண QR",
+        paymentQRDesc: "GPay/PhonePe/Paytm QR பதிவேற்றுக",
         themeTitle: "🎨 வண்ண தீம்",
         gstTitle: "ஜிஎஸ்டி அமைப்புகள்",
         gstToggleLabel: "ஜிஎஸ்டி செயல்படுத்துக",
         gstPercentLabel: "ஜிஎஸ்டி சதவீதம் (%)",
-        gstSaved: "ஜிஎஸ்டி அமைப்புகள் சேமிக்கப்பட்டன",
         dataTitle: "🗑️ தரவு மேலாண்மை",
         aboutTitle: "ℹ️ பற்றி",
-        aboutText: "ஹொசூர் இன்வாய்ஸ் பில் - சிறு வணிகங்களுக்கான இலவச இன்வாய்ஸ் ஜெனரேட்டர்",
-        supportEmail: "0gbtechintel@gmail.com",
-        
-        // QR Modal
+        aboutText: "ஹொசூர் இன்வாய்ஸ் பில் - இலவச இன்வாய்ஸ் ஜெனரேட்டர்",
         scanToPay: "ஸ்கேன் செய்து பணம் செலுத்துங்கள்",
-        scanInstruction: "GPay, PhonePe அல்லது Paytm மூலம் ஸ்கேன் செய்யவும்",
+        scanInstruction: "GPay, PhonePe, Paytm மூலம் ஸ்கேன் செய்யவும்",
         close: "மூடு",
-        noQR: "கட்டண QR இல்லை. அமைப்புகளில் சேர்க்கவும்.",
-        
-        // Placeholders
+        noQR: "கட்டண QR இல்லை",
         businessNamePlaceholder: "உதா: ஷ்ரீ முஹம்மது சன்ஸ்",
         businessContactPlaceholder: "தொலை: 9876543210, ஹொசூர் மெயின் ரோடு",
         customerNamePlaceholder: "உதா: ராஜேஷ் டெக்ஸ்டைல்ஸ்",
         customerMobilePlaceholder: "உதா: 9876543210",
         itemNamePlaceholder: "பொருள் பெயர் (உதா: அரிசி 5கிலோ)",
         notesPlaceholder: "நன்றி! மீண்டும் வருக",
-        
-        // Tips
         tipText: "💡 குறிப்பு: தட்டச்சு செய்ய ஆரம்பித்தால் பரிந்துரைகள் வரும்! ஜிஎஸ்டியை அமைப்புகளில் மாற்றலாம்",
-        
-        // Alerts
         confirmDelete: "இந்த இன்வாய்ஸை நீக்க வேண்டுமா?",
         deleteSuccess: "✅ இன்வாய்ஸ் நீக்கப்பட்டது!",
         updateSuccess: "✅ இன்வாய்ஸ் புதுப்பிக்கப்பட்டது!",
         saveSuccess: "✅ இன்வாய்ஸ் சேமிக்கப்பட்டது!",
-        noItemAlert: "⚠️ தயவுசெய்து குறைந்தது ஒரு பொருளையாவது சேர்க்கவும்!",
-        clearConfirm: "⚠️ எச்சரிக்கை: இது உங்கள் உலாவியில் உள்ள அனைத்து இன்வாய்ஸ்களையும் நீக்கும்!\n\nதொடரவா?",
+        noItemAlert: "⚠️ குறைந்தது ஒரு பொருளையாவது சேர்க்கவும்!",
+        clearConfirm: "⚠️ எல்லா இன்வாய்ஸ்களையும் நீக்க வேண்டுமா?",
         themeChanged: "வண்ண தீம் மாற்றப்பட்டது",
-        qrUploadSuccess: "QR குறியீடு வெற்றிகரமாக பதிவேற்றப்பட்டது!",
-        qrRemoved: "QR குறியீடு நீக்கப்பட்டது",
-        newBillReady: "✅ புதிய பில்லுக்கு தயார்! வாடிக்கையாளர் விவரங்களை உள்ளிடவும்."
+        qrUploadSuccess: "QR பதிவேற்றப்பட்டது!",
+        qrRemoved: "QR நீக்கப்பட்டது",
+        newBillReady: "✅ புதிய பில்லுக்கு தயார்!"
     },
     english: {
-        // Header
         appTitle: "🏪 Hosur Invoice Bill",
         subtitle: "Hosur Invoice Bill",
         createdBy: "by Shri Muhammed Zabiullah Khan",
-        
-        // Buttons
         showQR: "Show QR",
         settings: "Settings",
         newBill: "New Bill",
         addItem: "Add Item",
         saveInvoice: "💾 Save Invoice & Print",
         updateInvoice: "🔄 Update Invoice & Print",
-        cancel: "Cancel",
         uploadQR: "Upload QR",
         removeQR: "Remove QR",
         clearAllData: "Clear All My Data",
-        
-        // Business Section
         businessTitle: "🏪 My Business Details",
         businessName: "Business Name",
         businessContact: "Contact & Address",
         invoicePrefix: "Invoice Number Pattern",
         nextInvoice: "Next Invoice Number",
-        
-        // Customer Section
         createInvoice: "➕ Create New Invoice",
         editInvoiceTitle: "✏️ Edit Invoice",
         customerName: "Customer Name",
         customerMobile: "Mobile Number",
-        
-        // Items Section
         itemsLabel: "📦 Items",
         itemName: "Item Name",
         qty: "Qty",
         price: "Price (₹)",
         total: "Total (₹)",
-        
-        // Summary
         subtotal: "Subtotal",
         gst: "GST",
         grandTotal: "Total",
-        
-        // Notes
         notes: "Notes",
-        
-        // History
         historyTitle: "📄 My Invoices",
-        noInvoices: "No invoices yet. Create your first invoice above!",
-        
-        // Actions
+        noInvoices: "No invoices yet",
         view: "View",
         edit: "Edit",
         delete: "Delete",
-        
-        // Settings Panel
         settingsTitle: "Settings",
-        paymentQRTitle: "Your Payment QR Code",
-        paymentQRDesc: "Upload your GPay/PhonePe/Paytm QR code",
+        paymentQRTitle: "Your Payment QR",
+        paymentQRDesc: "Upload GPay/PhonePe/Paytm QR",
         themeTitle: "🎨 Theme Color",
         gstTitle: "GST Settings",
         gstToggleLabel: "Enable GST",
         gstPercentLabel: "GST Percentage (%)",
-        gstSaved: "GST settings saved",
         dataTitle: "🗑️ Data Management",
         aboutTitle: "ℹ️ About",
-        aboutText: "Hosur Invoice Bill - Free invoice generator for small businesses",
-        supportEmail: "0gbtechintel@gmail.com",
-        
-        // QR Modal
+        aboutText: "Hosur Invoice Bill - Free invoice generator",
         scanToPay: "Scan to Pay",
-        scanInstruction: "Scan with GPay, PhonePe, or Paytm to pay",
+        scanInstruction: "Scan with GPay, PhonePe, or Paytm",
         close: "Close",
-        noQR: "No payment QR uploaded. Please add in settings.",
-        
-        // Placeholders
+        noQR: "No payment QR uploaded",
         businessNamePlaceholder: "Ex: Shri Muhammed Sons",
         businessContactPlaceholder: "Phone: 9876543210, Hosur Main Road",
         customerNamePlaceholder: "Ex: Rajesh Textiles",
         customerMobilePlaceholder: "Ex: 9876543210",
         itemNamePlaceholder: "Item name (Ex: Rice 5kg)",
         notesPlaceholder: "Thank you! Visit again",
-        
-        // Tips
         tipText: "💡 Tip: Start typing - auto suggestions appear! Configure GST in Settings",
-        
-        // Alerts
         confirmDelete: "Are you sure you want to delete this invoice?",
         deleteSuccess: "✅ Invoice deleted!",
         updateSuccess: "✅ Invoice updated!",
         saveSuccess: "✅ Invoice saved!",
         noItemAlert: "⚠️ Please add at least one item!",
-        clearConfirm: "⚠️ WARNING: This will delete ALL your invoices from this browser!\n\nContinue?",
+        clearConfirm: "⚠️ Delete all invoices?",
         themeChanged: "Theme changed",
-        qrUploadSuccess: "QR code uploaded successfully!",
-        qrRemoved: "QR code removed",
-        newBillReady: "✅ Ready for new bill! Enter customer details."
+        qrUploadSuccess: "QR uploaded!",
+        qrRemoved: "QR removed",
+        newBillReady: "✅ Ready for new bill!"
     }
 };
-
-// Apply all translations to HTML
-function applyTranslations() {
-    const t = translations[currentLanguage];
-    
-    // Header
-    setText('appTitle', t.appTitle);
-    setText('subtitleText', t.subtitle);
-    setText('createdByText', t.createdBy);
-    
-    // Buttons
-    setText('showQRBtn', t.showQR);
-    setText('settingsBtn', t.settings);
-    setText('newBillBtn', t.newBill);
-    setText('addItemBtn', t.addItem);
-    setText('saveBtnText', editingInvoiceId ? t.updateInvoice : t.saveInvoice);
-    setText('uploadQRBtn', t.uploadQR);
-    setText('removeQRBtn', t.removeQR);
-    setText('clearDataBtn', t.clearAllData);
-    
-    // Business Section
-    setText('businessTitle', t.businessTitle);
-    setText('businessNameLabel', t.businessName);
-    setText('businessContactLabel', t.businessContact);
-    setText('invoicePrefixLabel', t.invoicePrefix);
-    setText('nextInvoiceLabel', t.nextInvoice);
-    
-    // Customer Section
-    setText('createInvoiceTitle', editingInvoiceId ? t.editInvoiceTitle : t.createInvoice);
-    setText('customerNameLabel', t.customerName);
-    setText('customerMobileLabel', t.customerMobile);
-    
-    // Items Section
-    setText('itemsLabel', t.itemsLabel);
-    setText('itemNameHeader', t.itemName);
-    setText('qtyHeader', t.qty);
-    setText('priceHeader', t.price);
-    setText('totalHeader', t.total);
-    
-    // Summary
-    setText('subtotalLabel', t.subtotal);
-    if (gstEnabled) {
-        setText('gstLabel', `${t.gst} (${gstPercentage}%)`);
-    } else {
-        setText('gstLabel', t.gst);
-    }
-    setText('totalLabel', t.grandTotal);
-    
-    // Notes
-    setText('notesLabel', t.notes);
-    
-    // History
-    setText('historyTitle', t.historyTitle);
-    setText('noInvoicesText', t.noInvoices);
-    
-    // Settings Panel
-    setText('settingsTitle', t.settingsTitle);
-    setText('qrUploadTitle', t.paymentQRTitle);
-    setText('qrUploadDesc', t.paymentQRDesc);
-    setText('themeTitle', t.themeTitle);
-    setText('gstTitle', t.gstTitle);
-    setText('gstToggleLabel', t.gstToggleLabel);
-    setText('gstPercentLabel', t.gstPercentLabel);
-    setText('dataTitle', t.dataTitle);
-    setText('aboutTitle', t.aboutTitle);
-    setText('aboutText', t.aboutText);
-    
-    // QR Modal
-    setText('paymentQRTitle', t.scanToPay);
-    setText('paymentQRInstruction', t.scanInstruction);
-    setText('qrCloseBtn', t.close);
-    setText('noQRText', t.noQR);
-    
-    // Tips
-    setText('tipText', t.tipText);
-    
-    // Placeholders
-    const businessNameInput = document.getElementById('businessName');
-    const businessContactInput = document.getElementById('businessContact');
-    const customerNameInput = document.getElementById('customerName');
-    const customerMobileInput = document.getElementById('customerMobile');
-    const tamilNotesInput = document.getElementById('tamilNotes');
-    
-    if (businessNameInput) businessNameInput.placeholder = t.businessNamePlaceholder;
-    if (businessContactInput) businessContactInput.placeholder = t.businessContactPlaceholder;
-    if (customerNameInput) customerNameInput.placeholder = t.customerNamePlaceholder;
-    if (customerMobileInput) customerMobileInput.placeholder = t.customerMobilePlaceholder;
-    if (tamilNotesInput) tamilNotesInput.placeholder = t.notesPlaceholder;
-    
-    // Update language button text
-    const langBtn = document.getElementById('langBtn');
-    if (langBtn) langBtn.innerHTML = `<i class="fas fa-language"></i> ${currentLanguage === 'tamil' ? 'English' : 'தமிழ்'}`;
-    
-    // Update item name placeholders
-    document.querySelectorAll('.item-name').forEach(input => {
-        input.placeholder = t.itemNamePlaceholder;
-    });
-}
 
 function setText(elementId, text) {
     const el = document.getElementById(elementId);
     if (el) el.textContent = text;
+}
+
+function applyTranslations() {
+    const t = translations[currentLanguage];
+    const elements = ['appTitle', 'subtitleText', 'createdByText', 'showQRBtn', 'settingsBtn', 'newBillBtn', 
+        'addItemBtn', 'businessTitle', 'businessNameLabel', 'businessContactLabel', 'invoicePrefixLabel', 
+        'nextInvoiceLabel', 'createInvoiceTitle', 'customerNameLabel', 'customerMobileLabel', 'itemsLabel',
+        'itemNameHeader', 'qtyHeader', 'priceHeader', 'totalHeader', 'subtotalLabel', 'totalLabel', 
+        'notesLabel', 'historyTitle', 'noInvoicesText', 'settingsTitle', 'qrUploadTitle', 'qrUploadDesc',
+        'themeTitle', 'gstTitle', 'gstToggleLabel', 'gstPercentLabel', 'dataTitle', 'aboutTitle', 'aboutText',
+        'paymentQRTitle', 'paymentQRInstruction', 'qrCloseBtn', 'noQRText', 'tipText', 'uploadQRBtn', 'removeQRBtn', 'clearDataBtn'];
+    
+    elements.forEach(id => {
+        const el = document.getElementById(id);
+        if (el && t[id]) el.textContent = t[id];
+    });
+    
+    setText('saveBtnText', editingInvoiceId ? t.updateInvoice : t.saveInvoice);
+    setText('gstLabel', gstEnabled ? `${t.gst} (${gstPercentage}%)` : t.gst);
+    
+    const placeholders = {
+        businessName: t.businessNamePlaceholder,
+        businessContact: t.businessContactPlaceholder,
+        customerName: t.customerNamePlaceholder,
+        customerMobile: t.customerMobilePlaceholder,
+        tamilNotes: t.notesPlaceholder
+    };
+    for (const [id, placeholder] of Object.entries(placeholders)) {
+        const el = document.getElementById(id);
+        if (el) el.placeholder = placeholder;
+    }
+    
+    const langBtn = document.getElementById('langBtn');
+    if (langBtn) langBtn.innerHTML = `<i class="fas fa-language"></i> ${currentLanguage === 'tamil' ? 'English' : 'தமிழ்'}`;
+    
+    document.querySelectorAll('.item-name').forEach(input => {
+        input.placeholder = t.itemNamePlaceholder;
+    });
 }
 
 function showToast(message) {
@@ -391,7 +262,6 @@ function toggleLanguage() {
     showToast(currentLanguage === 'tamil' ? '✅ தமிழுக்கு மாற்றப்பட்டது' : '✅ Switched to English');
 }
 
-// Settings Panel
 function openSettings() {
     document.getElementById('settingsPanel').classList.add('open');
     document.getElementById('settingsOverlay').classList.add('active');
@@ -402,7 +272,6 @@ function closeSettings() {
     document.getElementById('settingsOverlay').classList.remove('active');
 }
 
-// Theme
 function changeTheme(theme) {
     document.body.className = '';
     document.body.classList.add(`theme-${theme}`);
@@ -411,7 +280,6 @@ function changeTheme(theme) {
     closeSettings();
 }
 
-// QR Code Functions
 function showPaymentQR() {
     const savedQR = localStorage.getItem('payment_qr');
     const modal = document.getElementById('paymentQRModal');
@@ -456,7 +324,6 @@ function removeQRCode() {
     showToast(translations[currentLanguage].qrRemoved);
 }
 
-// New Bill - Clear form for next customer
 function resetForNewBill() {
     const t = translations[currentLanguage];
     document.getElementById('customerName').value = '';
@@ -477,13 +344,11 @@ function resetForNewBill() {
         if (saveBtn) saveBtn.innerHTML = `<i class="fas fa-save"></i> ${t.saveInvoice}`;
         document.getElementById('createInvoiceTitle').innerHTML = t.createInvoice;
     }
-    
     showToast(t.newBillReady);
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// ============ Database Functions ============
-
+// Database Functions
 function initDB() {
     return new Promise((resolve, reject) => {
         const request = indexedDB.open('HosurInvoiceDB', 3);
@@ -707,13 +572,14 @@ function addRowEventListeners(row) {
     const qtyInput = row.querySelector('.item-qty');
     const priceInput = row.querySelector('.item-price');
     const nameInput = row.querySelector('.item-name');
+    const t = translations[currentLanguage];
     
     const update = () => calculateAllTotals();
     if (qtyInput) qtyInput.addEventListener('input', update);
     if (priceInput) priceInput.addEventListener('input', update);
     
     if (nameInput) {
-        nameInput.placeholder = translations[currentLanguage].itemNamePlaceholder;
+        nameInput.placeholder = t.itemNamePlaceholder;
         nameInput.addEventListener('input', async (e) => {
             update();
             const query = e.target.value;
@@ -767,7 +633,401 @@ function initializeFirstRow() {
     }
 }
 
-// ============ CRUD Operations ============
+// Professional Print Function with Save to Server
+async function saveInvoice() {
+    const t = translations[currentLanguage];
+    const businessName = document.getElementById('businessName').value || 'My Business';
+    const businessContact = document.getElementById('businessContact').value || 'Contact Info';
+    const customerName = document.getElementById('customerName').value || 'Guest';
+    const customerMobile = document.getElementById('customerMobile').value || '';
+    const tamilNotes = document.getElementById('tamilNotes').value;
+    
+    await saveToAutoComplete('businessNames', businessName);
+    await saveToAutoComplete('customerNames', customerName);
+    
+    const items = [];
+    const rows = document.querySelectorAll('#itemsTable tr');
+    for (const row of rows) {
+        const name = row.querySelector('.item-name')?.value.trim();
+        const qty = parseFloat(row.querySelector('.item-qty')?.value) || 0;
+        const price = parseFloat(row.querySelector('.item-price')?.value) || 0;
+        if (name && (qty > 0 || price > 0)) {
+            items.push({ name, qty, price, total: qty * price });
+            await saveToAutoComplete('itemNames', name);
+        }
+    }
+    
+    if (items.length === 0) {
+        alert(t.noItemAlert);
+        return;
+    }
+    
+    const { subtotal, gst, total } = calculateAllTotals();
+    const date = new Date().toLocaleDateString('en-IN');
+    const timestamp = new Date().toISOString();
+    
+    let invoice;
+    
+    if (editingInvoiceId) {
+        const existing = await getInvoiceById(editingInvoiceId);
+        invoice = { ...existing, businessName, businessContact, customerName, customerMobile, items, 
+            subtotal: subtotal.toFixed(2), gst: gst.toFixed(2), total: total.toFixed(2), tamilNotes, updatedAt: timestamp };
+        await saveInvoiceToDB(invoice);
+        showToast(t.updateSuccess);
+        editingInvoiceId = null;
+        document.getElementById('createInvoiceTitle').innerHTML = t.createInvoice;
+        const saveBtn = document.getElementById('saveInvoiceBtn');
+        if (saveBtn) saveBtn.innerHTML = `<i class="fas fa-save"></i> ${t.saveInvoice}`;
+    } else {
+        const invoiceNo = await getNextInvoiceNumber();
+        invoice = { id: Date.now(), invoiceNo, date, businessName, businessContact, customerName, customerMobile, 
+            items, subtotal: subtotal.toFixed(2), gst: gst.toFixed(2), total: total.toFixed(2), tamilNotes, 
+            footprint: getDigitalFootprint(), timestamp };
+        await saveInvoiceToDB(invoice);
+        document.getElementById('customerName').value = '';
+        document.getElementById('customerMobile').value = '';
+        showToast(t.saveSuccess);
+    }
+    
+    await saveBusinessInfo({ businessName, businessContact });
+    await loadInvoices();
+    const nextNum = await getNextInvoiceNumber();
+    document.getElementById('nextInvoiceNumber').textContent = nextNum;
+    
+    // Generate Professional Print
+    await generateAndPrintProfessionalInvoice(invoice);
+    
+    // Try to save to server if online
+    if (navigator.onLine) {
+        saveInvoiceToServer(invoice);
+    }
+}
+
+// Save invoice to server for PDF storage
+async function saveInvoiceToServer(invoice) {
+    try {
+        const response = await fetch('/api/save-invoice', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(invoice)
+        });
+        if (response.ok) {
+            console.log('Invoice saved to server');
+        }
+    } catch (error) {
+        console.log('Server not available, invoice saved locally only');
+    }
+}
+
+// Professional Print Function
+function generateAndPrintProfessionalInvoice(invoice) {
+    const printWindow = window.open('', '_blank');
+    
+    // Create professional HTML for printing
+    const itemsHtml = invoice.items.map((item, index) => `
+        <tr style="border-bottom: 1px solid #e5e7eb;">
+            <td style="padding: 12px 8px; text-align: left; border-bottom: 1px solid #e5e7eb;">${index + 1}</td>
+            <td style="padding: 12px 8px; text-align: left; border-bottom: 1px solid #e5e7eb;">${escapeHtml(item.name)}</td>
+            <td style="padding: 12px 8px; text-align: center; border-bottom: 1px solid #e5e7eb;">${item.qty}</td>
+            <td style="padding: 12px 8px; text-align: right; border-bottom: 1px solid #e5e7eb;">₹ ${item.price.toFixed(2)}</td>
+            <td style="padding: 12px 8px; text-align: right; border-bottom: 1px solid #e5e7eb;">₹ ${item.total.toFixed(2)}</td>
+        </tr>
+    `).join('');
+    
+    const gstText = gstEnabled ? `GST (${gstPercentage}%)` : 'GST';
+    const gstAmount = gstEnabled ? parseFloat(invoice.gst).toFixed(2) : '0.00';
+    
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Invoice ${invoice.invoiceNo}</title>
+            <meta charset="UTF-8">
+            <style>
+                * {
+                    margin: 0;
+                    padding: 0;
+                    box-sizing: border-box;
+                }
+                body {
+                    font-family: 'Inter', 'Noto Sans Tamil', Arial, sans-serif;
+                    background: #f0f2f5;
+                    padding: 40px 20px;
+                    display: flex;
+                    justify-content: center;
+                }
+                .invoice-container {
+                    max-width: 900px;
+                    width: 100%;
+                    background: white;
+                    border-radius: 16px;
+                    box-shadow: 0 20px 35px -10px rgba(0,0,0,0.15);
+                    overflow: hidden;
+                }
+                .invoice-header {
+                    background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+                    color: white;
+                    padding: 30px 35px;
+                    text-align: center;
+                }
+                .invoice-header h1 {
+                    font-size: 28px;
+                    margin-bottom: 5px;
+                    letter-spacing: 1px;
+                }
+                .invoice-header p {
+                    font-size: 14px;
+                    opacity: 0.9;
+                }
+                .invoice-title {
+                    background: #f8fafc;
+                    padding: 15px 35px;
+                    border-bottom: 2px solid #e2e8f0;
+                }
+                .invoice-title h2 {
+                    color: #1e3a8a;
+                    font-size: 20px;
+                    font-weight: 600;
+                }
+                .business-info {
+                    padding: 25px 35px;
+                    background: white;
+                    border-bottom: 1px solid #e2e8f0;
+                }
+                .business-info h3 {
+                    color: #1f2937;
+                    font-size: 18px;
+                    margin-bottom: 8px;
+                }
+                .business-info p {
+                    color: #4b5563;
+                    font-size: 14px;
+                    line-height: 1.5;
+                }
+                .customer-info {
+                    padding: 20px 35px;
+                    background: #f8fafc;
+                    display: flex;
+                    justify-content: space-between;
+                    flex-wrap: wrap;
+                    gap: 20px;
+                    border-bottom: 1px solid #e2e8f0;
+                }
+                .customer-info div {
+                    flex: 1;
+                }
+                .customer-info strong {
+                    color: #1f2937;
+                    font-size: 14px;
+                    display: block;
+                    margin-bottom: 5px;
+                }
+                .customer-info p {
+                    color: #4b5563;
+                    font-size: 14px;
+                }
+                .invoice-details {
+                    padding: 20px 35px;
+                    background: white;
+                    display: flex;
+                    justify-content: space-between;
+                    border-bottom: 1px solid #e2e8f0;
+                }
+                .invoice-details div {
+                    text-align: center;
+                    flex: 1;
+                }
+                .invoice-details strong {
+                    color: #6b7280;
+                    font-size: 12px;
+                    display: block;
+                    margin-bottom: 5px;
+                }
+                .invoice-details p {
+                    color: #1f2937;
+                    font-size: 16px;
+                    font-weight: 600;
+                }
+                .items-table {
+                    padding: 20px 35px;
+                }
+                .items-table table {
+                    width: 100%;
+                    border-collapse: collapse;
+                }
+                .items-table th {
+                    background: #f1f5f9;
+                    padding: 12px 8px;
+                    text-align: left;
+                    font-size: 13px;
+                    font-weight: 600;
+                    color: #1e293b;
+                    border: 1px solid #cbd5e1;
+                }
+                .items-table th:first-child { width: 50px; text-align: center; }
+                .items-table th:nth-child(2) { text-align: left; }
+                .items-table th:nth-child(3) { text-align: center; width: 80px; }
+                .items-table th:nth-child(4) { text-align: right; width: 100px; }
+                .items-table th:nth-child(5) { text-align: right; width: 100px; }
+                .items-table td {
+                    padding: 10px 8px;
+                    font-size: 13px;
+                    color: #334155;
+                    border: 1px solid #cbd5e1;
+                }
+                .items-table td:first-child { text-align: center; }
+                .items-table td:nth-child(3) { text-align: center; }
+                .items-table td:nth-child(4) { text-align: right; }
+                .items-table td:nth-child(5) { text-align: right; }
+                .totals {
+                    padding: 20px 35px;
+                    background: #f8fafc;
+                    text-align: right;
+                    border-top: 2px solid #e2e8f0;
+                }
+                .totals table {
+                    width: 300px;
+                    margin-left: auto;
+                    border-collapse: collapse;
+                }
+                .totals td {
+                    padding: 8px 12px;
+                    font-size: 14px;
+                }
+                .totals td:first-child {
+                    text-align: left;
+                    font-weight: 500;
+                    color: #475569;
+                }
+                .totals td:last-child {
+                    text-align: right;
+                    font-weight: 600;
+                    color: #1f2937;
+                }
+                .totals .grand-total td {
+                    font-size: 18px;
+                    font-weight: 800;
+                    color: #1e3a8a;
+                    border-top: 2px solid #cbd5e1;
+                    padding-top: 12px;
+                }
+                .notes {
+                    padding: 20px 35px;
+                    background: white;
+                    border-top: 1px solid #e2e8f0;
+                    font-style: italic;
+                    color: #6b7280;
+                    font-size: 13px;
+                }
+                .footer {
+                    padding: 20px 35px;
+                    background: #f1f5f9;
+                    text-align: center;
+                    font-size: 11px;
+                    color: #64748b;
+                    border-top: 1px solid #e2e8f0;
+                }
+                @media print {
+                    body {
+                        background: white;
+                        padding: 0;
+                        margin: 0;
+                    }
+                    .invoice-container {
+                        box-shadow: none;
+                        border-radius: 0;
+                    }
+                    .no-print {
+                        display: none;
+                    }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="invoice-container">
+                <div class="invoice-header">
+                    <h1>${escapeHtml(invoice.businessName)}</h1>
+                    <p>${escapeHtml(invoice.businessContact)}</p>
+                </div>
+                
+                <div class="invoice-title">
+                    <h2>TAX INVOICE</h2>
+                </div>
+                
+                <div class="customer-info">
+                    <div>
+                        <strong>BILL TO:</strong>
+                        <p>${escapeHtml(invoice.customerName)}</p>
+                        ${invoice.customerMobile ? `<p>Mobile: ${escapeHtml(invoice.customerMobile)}</p>` : ''}
+                    </div>
+                    <div>
+                        <strong>INVOICE DETAILS:</strong>
+                        <p>Invoice No: ${invoice.invoiceNo}</p>
+                        <p>Date: ${invoice.date}</p>
+                    </div>
+                </div>
+                
+                <div class="items-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>ITEM DESCRIPTION</th>
+                                <th>QTY</th>
+                                <th>PRICE</th>
+                                <th>TOTAL</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${itemsHtml}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="totals">
+                    <table>
+                        <tr>
+                            <td>Subtotal</td>
+                            <td>₹ ${invoice.subtotal}</td>
+                        </tr>
+                        <tr>
+                            <td>${gstText}</td>
+                            <td>₹ ${gstAmount}</td>
+                        </tr>
+                        <tr class="grand-total">
+                            <td>TOTAL</td>
+                            <td>₹ ${invoice.total}</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="notes">
+                    <p>📝 ${escapeHtml(invoice.tamilNotes)}</p>
+                </div>
+                
+                <div class="footer">
+                    <p>Thank you for your business!</p>
+                    <p>Powered by Hosur Invoice Bill | www.hosurinvoice.com</p>
+                </div>
+            </div>
+            <script>
+                window.onload = function() {
+                    window.print();
+                    setTimeout(function() { window.close(); }, 1000);
+                };
+            <\/script>
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
 
 async function editInvoice(invoiceId) {
     const t = translations[currentLanguage];
@@ -823,107 +1083,6 @@ async function deleteInvoice(invoiceId) {
     }
 }
 
-async function saveInvoice() {
-    const t = translations[currentLanguage];
-    const businessName = document.getElementById('businessName').value || 'My Business';
-    const businessContact = document.getElementById('businessContact').value || 'Contact Info';
-    const customerName = document.getElementById('customerName').value || 'Guest';
-    const customerMobile = document.getElementById('customerMobile').value || '';
-    const tamilNotes = document.getElementById('tamilNotes').value;
-    
-    await saveToAutoComplete('businessNames', businessName);
-    await saveToAutoComplete('customerNames', customerName);
-    
-    const items = [];
-    const rows = document.querySelectorAll('#itemsTable tr');
-    for (const row of rows) {
-        const name = row.querySelector('.item-name')?.value.trim();
-        const qty = parseFloat(row.querySelector('.item-qty')?.value) || 0;
-        const price = parseFloat(row.querySelector('.item-price')?.value) || 0;
-        if (name && (qty > 0 || price > 0)) {
-            items.push({ name, qty, price, total: qty * price });
-            await saveToAutoComplete('itemNames', name);
-        }
-    }
-    
-    if (items.length === 0) {
-        alert(t.noItemAlert);
-        return;
-    }
-    
-    const { subtotal, gst, total } = calculateAllTotals();
-    const date = new Date().toLocaleDateString('en-IN');
-    
-    if (editingInvoiceId) {
-        const existing = await getInvoiceById(editingInvoiceId);
-        const invoice = { ...existing, businessName, businessContact, customerName, customerMobile, items, subtotal: subtotal.toFixed(2), gst: gst.toFixed(2), total: total.toFixed(2), tamilNotes, updatedAt: new Date().toISOString() };
-        await saveInvoiceToDB(invoice);
-        showToast(t.updateSuccess);
-        editingInvoiceId = null;
-        document.getElementById('createInvoiceTitle').innerHTML = t.createInvoice;
-        const saveBtn = document.getElementById('saveInvoiceBtn');
-        if (saveBtn) saveBtn.innerHTML = `<i class="fas fa-save"></i> ${t.saveInvoice}`;
-    } else {
-        const invoiceNo = await getNextInvoiceNumber();
-        const invoice = { id: Date.now(), invoiceNo, date, businessName, businessContact, customerName, customerMobile, items, subtotal: subtotal.toFixed(2), gst: gst.toFixed(2), total: total.toFixed(2), tamilNotes, footprint: getDigitalFootprint(), timestamp: new Date().toISOString() };
-        await saveInvoiceToDB(invoice);
-        document.getElementById('customerName').value = '';
-        document.getElementById('customerMobile').value = '';
-        showToast(t.saveSuccess);
-    }
-    
-    await saveBusinessInfo({ businessName, businessContact });
-    await loadInvoices();
-    const nextNum = await getNextInvoiceNumber();
-    document.getElementById('nextInvoiceNumber').textContent = nextNum;
-}
-
-function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-function generatePrintPDF(invoice) {
-    const win = window.open('', '_blank');
-    const itemsHtml = invoice.items.map(item => `
-        <tr><td style="border:1px solid #000;padding:8px;">${escapeHtml(item.name)}</td>
-        <td style="border:1px solid #000;padding:8px;text-align:center;">${item.qty}</td>
-        <td style="border:1px solid #000;padding:8px;text-align:right;">₹${item.price.toFixed(2)}</td>
-        <td style="border:1px solid #000;padding:8px;text-align:right;">₹${item.total.toFixed(2)}</td>
-        </tr>
-    `).join('');
-    
-    win.document.write(`
-        <!DOCTYPE html>
-        <html><head><title>Invoice ${invoice.invoiceNo}</title>
-        <style>
-            body{font-family:Arial;padding:20px;}
-            .invoice-box{max-width:800px;margin:auto;border:2px solid #000;padding:20px;}
-            .header{text-align:center;border-bottom:2px solid #000;margin-bottom:20px;}
-            .customer-details{margin-bottom:20px;background:#f5f5f5;padding:10px;}
-            table{width:100%;border-collapse:collapse;margin:20px 0;}
-            th,td{border:1px solid #000;padding:8px;}
-            th{background:#f0f0f0;}
-            .footer{margin-top:20px;text-align:center;}
-        </style>
-        </head><body>
-        <div class="invoice-box">
-            <div class="header"><h2>${escapeHtml(invoice.businessName)}</h2><p>${escapeHtml(invoice.businessContact)}</p><h3>TAX INVOICE</h3></div>
-            <div><strong>Invoice No:</strong> ${invoice.invoiceNo}<br><strong>Date:</strong> ${invoice.date}</div>
-            <div class="customer-details"><strong>Customer:</strong> ${escapeHtml(invoice.customerName)}<br>${invoice.customerMobile ? `<strong>Mobile:</strong> ${invoice.customerMobile}` : ''}</div>
-            <tr><thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead><tbody>${itemsHtml}</tbody></table>
-            <div style="text-align:right;"><p>Subtotal: ₹${invoice.subtotal}</p>
-            <p>${gstEnabled ? `GST (${gstPercentage}%): ₹${invoice.gst}` : 'GST: 0%'}</p>
-            <h3>Total: ₹${invoice.total}</h3></div>
-            <div class="footer"><p>${escapeHtml(invoice.tamilNotes)}</p><p>Powered by Hosur Invoice Bill</p></div>
-        </div>
-        <script>window.print();setTimeout(()=>window.close(),1000);<\/script>
-        </body></html>
-    `);
-}
-
 async function loadInvoices() {
     const invoices = await getAllInvoices();
     const container = document.getElementById('invoicesList');
@@ -944,19 +1103,19 @@ async function loadInvoices() {
                 <div><span class="font-bold text-blue-700">${inv.invoiceNo}</span> <span class="text-gray-600">${escapeHtml(inv.customerName)}</span></div>
                 <div><span class="font-bold text-green-700">₹${inv.total}</span> <span class="text-xs text-gray-500">${inv.date}</span></div>
             </div>
-            <div class="text-xs text-gray-400 mt-1">${inv.items.length} item(s) | ${escapeHtml(inv.items[0]?.name || '')}</div>
+            <div class="text-xs text-gray-400 mt-1">${inv.items.length} item(s)</div>
             <div class="flex gap-2 mt-2 pt-2 border-t">
-                <button onclick="viewInvoiceDetails(${inv.id})" class="flex-1 bg-blue-500 text-white px-2 py-1 rounded-lg text-xs"><i class="fas fa-eye"></i> <span class="view-btn-text">${t.view}</span></button>
-                <button onclick="editInvoice(${inv.id})" class="flex-1 bg-yellow-500 text-white px-2 py-1 rounded-lg text-xs"><i class="fas fa-edit"></i> <span class="edit-btn-text">${t.edit}</span></button>
-                <button onclick="deleteInvoice(${inv.id})" class="flex-1 bg-red-500 text-white px-2 py-1 rounded-lg text-xs"><i class="fas fa-trash"></i> <span class="delete-btn-text">${t.delete}</span></button>
+                <button onclick="viewAndPrintInvoice(${inv.id})" class="flex-1 bg-blue-500 text-white px-2 py-1 rounded-lg text-xs"><i class="fas fa-print"></i> ${t.view}</button>
+                <button onclick="editInvoice(${inv.id})" class="flex-1 bg-yellow-500 text-white px-2 py-1 rounded-lg text-xs"><i class="fas fa-edit"></i> ${t.edit}</button>
+                <button onclick="deleteInvoice(${inv.id})" class="flex-1 bg-red-500 text-white px-2 py-1 rounded-lg text-xs"><i class="fas fa-trash"></i> ${t.delete}</button>
             </div>
         </div>
     `).join('');
 }
 
-async function viewInvoiceDetails(invoiceId) {
+async function viewAndPrintInvoice(invoiceId) {
     const invoice = await getInvoiceById(invoiceId);
-    if (invoice) generatePrintPDF(invoice);
+    if (invoice) generateAndPrintProfessionalInvoice(invoice);
 }
 
 async function clearAllData() {
@@ -978,8 +1137,6 @@ async function clearAllData() {
         closeSettings();
     }
 }
-
-// ============ Auto-complete Setup ============
 
 async function setupBusinessAutoComplete() {
     const input = document.getElementById('businessName');
@@ -1013,8 +1170,7 @@ async function setupCustomerAutoComplete() {
     });
 }
 
-// ============ Event Listeners ============
-
+// Event Listeners
 document.getElementById('qrUpload').addEventListener('change', handleQRUpload);
 document.getElementById('businessName').addEventListener('input', async (e) => {
     const info = await loadBusinessInfo();
@@ -1032,8 +1188,7 @@ document.getElementById('invoicePrefix').addEventListener('change', async () => 
     document.getElementById('nextInvoiceNumber').textContent = nextNum;
 });
 
-// ============ Initialize ============
-
+// Initialize
 async function init() {
     try {
         const savedTheme = localStorage.getItem('app_theme');
@@ -1060,13 +1215,10 @@ async function init() {
         const nextNum = await getNextInvoiceNumber();
         document.getElementById('nextInvoiceNumber').textContent = nextNum;
         
-        // Load GST settings
         loadGSTSettings();
-        
-        // Apply translations after everything is loaded
         applyTranslations();
         
-        console.log('✅ Hosur Invoice Bill Ready! GST Configurable');
+        console.log('✅ Hosur Invoice Bill Ready!');
     } catch (error) {
         console.error('Init error:', error);
     }
@@ -1086,10 +1238,9 @@ window.removeItemRow = removeItemRow;
 window.saveInvoice = saveInvoice;
 window.editInvoice = editInvoice;
 window.deleteInvoice = deleteInvoice;
-window.viewInvoiceDetails = viewInvoiceDetails;
+window.viewAndPrintInvoice = viewAndPrintInvoice;
 window.clearAllData = clearAllData;
 window.toggleGST = toggleGST;
 window.saveGSTSettings = saveGSTSettings;
 
-// Start the app
 init();
