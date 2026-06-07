@@ -1,6 +1,7 @@
 // Hosur Invoice Bill - Complete Application
 // Created by Shri Muhammed Zabiullah Khan
 // Preview First, Then Print - Print button hides during print
+// Auto PDF filename: CustomerName_Date.pdf
 
 let db;
 let currentLanguage = 'tamil';
@@ -716,9 +717,32 @@ function initializeFirstRow() {
     }
 }
 
+// Generate sanitized filename from customer name and date
+function generateFileName(customerName, date) {
+    // Remove special characters from customer name
+    let cleanName = customerName.replace(/[^a-zA-Z0-9\u0B80-\u0BFF]/g, '_');
+    cleanName = cleanName.replace(/_+/g, '_');
+    cleanName = cleanName.substring(0, 50);
+    
+    // Format date as DD-MM-YYYY
+    let formattedDate = date;
+    if (date && date.includes('/')) {
+        const parts = date.split('/');
+        formattedDate = `${parts[0]}-${parts[1]}-${parts[2]}`;
+    } else {
+        const today = new Date();
+        formattedDate = `${today.getDate()}-${today.getMonth() + 1}-${today.getFullYear()}`;
+    }
+    
+    return `${cleanName}_${formattedDate}.pdf`;
+}
+
 // Generate Preview HTML (with Print button that hides during print)
 function generatePreviewHTML(invoice, isEdit = false) {
     const t = translations[currentLanguage];
+    
+    // Generate filename for display
+    const fileName = generateFileName(invoice.customerName, invoice.date);
     
     const itemsHtml = invoice.items.map((item, index) => `
         <tr>
@@ -785,6 +809,14 @@ function generatePreviewHTML(invoice, isEdit = false) {
                 .customer-info div { flex: 1; }
                 .customer-info strong { color: #1f2937; font-size: 12px; display: block; margin-bottom: 4px; }
                 .customer-info p { color: #4b5563; font-size: 13px; }
+                .filename-info {
+                    background: #e8f0fe;
+                    padding: 10px 30px;
+                    font-size: 11px;
+                    color: #1e3a8a;
+                    border-bottom: 1px solid #e2e8f0;
+                    text-align: center;
+                }
                 .items-table { padding: 15px 30px; }
                 .items-table table { width: 100%; border-collapse: collapse; }
                 .items-table th {
@@ -851,7 +883,7 @@ function generatePreviewHTML(invoice, isEdit = false) {
                 }
                 .close-btn:hover { transform: scale(1.02); }
                 @media print {
-                    .button-container, .print-btn, .close-btn {
+                    .button-container, .print-btn, .close-btn, .filename-info {
                         display: none !important;
                     }
                     body {
@@ -873,6 +905,9 @@ function generatePreviewHTML(invoice, isEdit = false) {
                     <p>${escapeHtml(invoice.businessContact)}</p>
                 </div>
                 <div class="invoice-title"><h2>TAX INVOICE</h2></div>
+                <div class="filename-info">
+                    📄 ${currentLanguage === 'tamil' ? 'PDF கோப்பு பெயர்:' : 'PDF File Name:'} <strong>${fileName}</strong>
+                </div>
                 <div class="customer-info">
                     <div><strong>BILL TO:</strong><p>${escapeHtml(invoice.customerName)}</p>${invoice.customerMobile ? `<p>Mobile: ${escapeHtml(invoice.customerMobile)}</p>` : ''}</div>
                     <div><strong>INVOICE DETAILS:</strong><p>No: ${invoice.invoiceNo}</p><p>Date: ${invoice.date}</p></div>
@@ -886,7 +921,7 @@ function generatePreviewHTML(invoice, isEdit = false) {
                 <div class="totals">
                     <table>
                         <tr><td>Subtotal</td><td>₹ ${invoice.subtotal}</td></tr>
-                        <tr><td>${gstText}</td><td>₹ ${gstAmount}</td></tr>
+                        <td>${gstText}</td><td>₹ ${gstAmount}</td></tr>
                         <tr class="grand-total"><td>TOTAL</td><td>₹ ${invoice.total}</td></tr>
                     </table>
                 </div>
@@ -897,6 +932,10 @@ function generatePreviewHTML(invoice, isEdit = false) {
                     <button class="close-btn" onclick="window.close()">❌ ${t.closePreview}</button>
                 </div>
             </div>
+            <script>
+                // Set the document title for the PDF
+                document.title = "${fileName.replace('.pdf', '')}";
+            </script>
         </body>
         </html>
     `;
@@ -1219,7 +1258,7 @@ async function init() {
         loadGSTSettings();
         applyTranslations();
         
-        console.log('✅ Hosur Invoice Bill Ready! Preview First, Then Print');
+        console.log('✅ Hosur Invoice Bill Ready! Auto PDF filename: CustomerName_Date.pdf');
     } catch (error) {
         console.error('Init error:', error);
     }
