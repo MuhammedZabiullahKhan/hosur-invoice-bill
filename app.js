@@ -1,13 +1,11 @@
 // Hosur Invoice Bill - Complete Application
 // Created by Shri Muhammed Zabiullah Khan
-// Full Tamil & English Support - 100% Translation
-// File Management: Saves invoices to local folders
+// Direct PDF Generation - Mobile Friendly
 
 let db;
 let currentLanguage = 'tamil';
 let itemCounter = 0;
 let editingInvoiceId = null;
-let rootDirectoryHandle = null;
 
 // GST Settings
 let gstEnabled = false;
@@ -108,12 +106,12 @@ const translations = {
         gst: "ஜிஎஸ்டி",
         grandTotal: "மொத்தம்",
         notes: "குறிப்புகள் (தமிழ்)",
-        saveInvoice: "💾 இன்வாய்ஸ் சேமி & அச்சிடு",
-        updateInvoice: "🔄 இன்வாய்ஸ் புதுப்பி & அச்சிடு",
+        saveInvoice: "💾 இன்வாய்ஸ் சேமி & PDF",
+        updateInvoice: "🔄 இன்வாய்ஸ் புதுப்பி & PDF",
         cancelEdit: "ரத்து செய்",
         historyTitle: "📄 என் இன்வாய்ஸ்கள்",
         noInvoices: "இன்னும் இன்வாய்ஸ் இல்லை. மேலே உங்கள் முதல் இன்வாய்ஸ் உருவாக்கவும்!",
-        view: "பார்",
+        view: "PDF காண்க",
         edit: "திருத்து",
         delete: "நீக்கு",
         settingsTitle: "அமைப்புகள்",
@@ -121,9 +119,6 @@ const translations = {
         paymentQRDesc: "உங்கள் ஜிபே/போன்பே/பேட்டிஎம் QR ஐ பதிவேற்றவும்",
         uploadQR: "QR பதிவேற்று",
         removeQR: "QR நீக்கு",
-        folderTitle: "சேமிப்பு இடம்",
-        selectFolder: "சேமிப்பு கோப்புறையை தேர்ந்தெடுக்கவும்",
-        folderInfo: "இன்வாய்ஸ் கோப்புகளை சேமிக்க இடத்தை தேர்வு செய்யவும்",
         themeTitle: "🎨 வண்ண தீம்",
         gstTitle: "ஜிஎஸ்டி அமைப்புகள்",
         gstToggleLabel: "ஜிஎஸ்டி செயல்படுத்துக",
@@ -156,9 +151,8 @@ const translations = {
         qrUploadSuccess: "QR குறியீடு வெற்றிகரமாக பதிவேற்றப்பட்டது!",
         qrRemoved: "QR குறியீடு நீக்கப்பட்டது",
         newBillReady: "✅ புதிய பில்லுக்கு தயார்! வாடிக்கையாளர் விவரங்களை உள்ளிடவும்.",
-        folderSelected: "✅ கோப்புறை தேர்ந்தெடுக்கப்பட்டது",
-        pdfSaved: "✅ PDF சேமிக்கப்பட்டது",
-        gstSaved: "ஜிஎஸ்டி அமைப்புகள் சேமிக்கப்பட்டன"
+        pdfSaved: "✅ PDF தயார்! உங்கள் சாதனத்தில் சேமிக்கவும்",
+        pdfOpened: "PDF திறக்கப்பட்டது. இப்போது சேமிக்கவும் அல்லது பகிரவும்"
     },
     english: {
         appTitle: "🏪 Hosur Invoice Bill",
@@ -186,12 +180,12 @@ const translations = {
         gst: "GST",
         grandTotal: "Total",
         notes: "Notes",
-        saveInvoice: "💾 Save Invoice & Print",
-        updateInvoice: "🔄 Update Invoice & Print",
+        saveInvoice: "💾 Save Invoice & PDF",
+        updateInvoice: "🔄 Update Invoice & PDF",
         cancelEdit: "Cancel",
         historyTitle: "📄 My Invoices",
         noInvoices: "No invoices yet. Create your first invoice above!",
-        view: "View",
+        view: "View PDF",
         edit: "Edit",
         delete: "Delete",
         settingsTitle: "Settings",
@@ -199,9 +193,6 @@ const translations = {
         paymentQRDesc: "Upload your GPay/PhonePe/Paytm QR code",
         uploadQR: "Upload QR",
         removeQR: "Remove QR",
-        folderTitle: "Save Location",
-        selectFolder: "Select Save Folder",
-        folderInfo: "Choose where to save invoice files",
         themeTitle: "🎨 Theme Color",
         gstTitle: "GST Settings",
         gstToggleLabel: "Enable GST",
@@ -211,7 +202,7 @@ const translations = {
         clearDataBtn: "Clear All My Data",
         clearWarning: "Warning: This will delete all your invoices",
         aboutTitle: "ℹ️ About",
-        aboutText: "Hosur Invoice Bill - Free invoice generator",
+        aboutText: "Hosur Invoice Bill - Free invoice generator for small businesses",
         scanToPay: "Scan to Pay",
         scanInstruction: "Scan with GPay, PhonePe, or Paytm to pay",
         close: "Close",
@@ -234,9 +225,8 @@ const translations = {
         qrUploadSuccess: "QR code uploaded successfully!",
         qrRemoved: "QR code removed",
         newBillReady: "✅ Ready for new bill! Enter customer details.",
-        folderSelected: "✅ Folder selected",
-        pdfSaved: "✅ PDF saved",
-        gstSaved: "GST settings saved"
+        pdfSaved: "✅ PDF ready! Save to your device",
+        pdfOpened: "PDF opened. Save or share now"
     }
 };
 
@@ -320,13 +310,6 @@ function applyTranslations() {
     document.querySelectorAll('.item-name').forEach(input => {
         input.placeholder = t.itemNamePlaceholder;
     });
-    
-    const folderTitle = document.getElementById('folderTitle');
-    const selectFolderBtnText = document.getElementById('selectFolderBtnText');
-    const folderInfo = document.getElementById('folderInfo');
-    if (folderTitle) folderTitle.textContent = t.folderTitle;
-    if (selectFolderBtnText) selectFolderBtnText.textContent = t.selectFolder;
-    if (folderInfo) folderInfo.textContent = t.folderInfo;
     
     const gstInfoText = document.getElementById('gstInfoText');
     if (gstInfoText) {
@@ -443,81 +426,6 @@ function resetForNewBill() {
     }
     showToast(t.newBillReady);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-// File System Access API Functions
-async function requestSaveDirectory() {
-    const t = translations[currentLanguage];
-    try {
-        if ('showDirectoryPicker' in window) {
-            rootDirectoryHandle = await window.showDirectoryPicker();
-            localStorage.setItem('saveDirectoryPermission', 'granted');
-            showToast(t.folderSelected);
-            return true;
-        } else {
-            showToast('Your browser doesn\'t support file saving. Use Save as PDF from print dialog.');
-            return false;
-        }
-    } catch (error) {
-        if (error.name !== 'AbortError') {
-            console.error('Error selecting directory:', error);
-            showToast('Could not select directory. Using print fallback.');
-        }
-        return false;
-    }
-}
-
-async function getTodaysFolder() {
-    if (!rootDirectoryHandle) return null;
-    
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
-    const folderName = `${year}-${month}-${day}`;
-    
-    try {
-        let folderHandle = await rootDirectoryHandle.getDirectoryHandle(folderName, { create: false });
-        return folderHandle;
-    } catch (e) {
-        try {
-            let folderHandle = await rootDirectoryHandle.getDirectoryHandle(folderName, { create: true });
-            return folderHandle;
-        } catch (err) {
-            console.error('Error creating folder:', err);
-            return null;
-        }
-    }
-}
-
-async function savePDFToDevice(pdfBlob, fileName) {
-    const t = translations[currentLanguage];
-    if (!rootDirectoryHandle) {
-        const confirmed = confirm(`${t.selectFolder}?`);
-        if (confirmed) {
-            const success = await requestSaveDirectory();
-            if (!success) return false;
-        } else {
-            return false;
-        }
-    }
-    
-    try {
-        const todayFolder = await getTodaysFolder();
-        if (!todayFolder) return false;
-        
-        const fileHandle = await todayFolder.getFileHandle(fileName, { create: true });
-        const writable = await fileHandle.createWritable();
-        await writable.write(pdfBlob);
-        await writable.close();
-        
-        showToast(`${t.pdfSaved}: ${fileName}`);
-        return true;
-    } catch (error) {
-        console.error('Error saving PDF:', error);
-        showToast('Could not save PDF. Using print fallback.');
-        return false;
-    }
 }
 
 // Database Functions
@@ -805,16 +713,17 @@ function initializeFirstRow() {
     }
 }
 
-// Generate PDF HTML
-function generatePDFHtml(invoice) {
+// Direct PDF Generation - Mobile Friendly
+function generatePDFAndDownload(invoice, isEdit = false) {
     const t = translations[currentLanguage];
+    
     const itemsHtml = invoice.items.map((item, index) => `
-        <tr style="border-bottom: 1px solid #e5e7eb;">
-            <td style="padding: 12px 8px; text-align: center; border: 1px solid #ddd;">${index + 1}</td>
-            <td style="padding: 12px 8px; text-align: left; border: 1px solid #ddd;">${escapeHtml(item.name)}</td>
-            <td style="padding: 12px 8px; text-align: center; border: 1px solid #ddd;">${item.qty}</td>
-            <td style="padding: 12px 8px; text-align: right; border: 1px solid #ddd;">₹ ${item.price.toFixed(2)}</td>
-            <td style="padding: 12px 8px; text-align: right; border: 1px solid #ddd;">₹ ${item.total.toFixed(2)}</td>
+        <tr>
+            <td style="padding: 10px 8px; text-align: center; border: 1px solid #ddd;">${index + 1}</td>
+            <td style="padding: 10px 8px; text-align: left; border: 1px solid #ddd;">${escapeHtml(item.name)}</td>
+            <td style="padding: 10px 8px; text-align: center; border: 1px solid #ddd;">${item.qty}</td>
+            <td style="padding: 10px 8px; text-align: right; border: 1px solid #ddd;">₹ ${item.price.toFixed(2)}</td>
+            <td style="padding: 10px 8px; text-align: right; border: 1px solid #ddd;">₹ ${item.total.toFixed(2)}</td>
         </tr>
     `).join('');
     
@@ -823,18 +732,22 @@ function generatePDFHtml(invoice) {
     const thankyouText = currentLanguage === 'tamil' ? 'நன்றி! மீண்டும் வருக' : 'Thank you! Visit again';
     const poweredText = currentLanguage === 'tamil' ? 'ஹொசூர் இன்வாய்ஸ் பில் மூலம் இயக்கப்படுகிறது' : 'Powered by Hosur Invoice Bill';
     
-    return `
+    const printContent = `
         <!DOCTYPE html>
         <html>
         <head>
             <meta charset="UTF-8">
             <title>Invoice ${invoice.invoiceNo}</title>
             <style>
+                @media print {
+                    body { margin: 0; padding: 0; }
+                    .no-print { display: none; }
+                }
                 * { margin: 0; padding: 0; box-sizing: border-box; }
                 body {
                     font-family: 'Inter', 'Noto Sans Tamil', Arial, sans-serif;
                     background: #f0f2f5;
-                    padding: 40px 20px;
+                    padding: 20px;
                     display: flex;
                     justify-content: center;
                 }
@@ -849,61 +762,76 @@ function generatePDFHtml(invoice) {
                 .invoice-header {
                     background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
                     color: white;
-                    padding: 30px 35px;
+                    padding: 25px 30px;
                     text-align: center;
                 }
-                .invoice-header h1 { font-size: 28px; margin-bottom: 5px; }
-                .invoice-header p { font-size: 14px; opacity: 0.9; }
+                .invoice-header h1 { font-size: 24px; margin-bottom: 5px; }
+                .invoice-header p { font-size: 12px; opacity: 0.9; }
                 .invoice-title {
                     background: #f8fafc;
-                    padding: 15px 35px;
+                    padding: 12px 30px;
                     border-bottom: 2px solid #e2e8f0;
                 }
-                .invoice-title h2 { color: #1e3a8a; font-size: 20px; }
+                .invoice-title h2 { color: #1e3a8a; font-size: 18px; }
                 .customer-info {
-                    padding: 20px 35px;
+                    padding: 15px 30px;
                     background: #f8fafc;
                     display: flex;
                     justify-content: space-between;
                     flex-wrap: wrap;
-                    gap: 20px;
+                    gap: 15px;
                     border-bottom: 1px solid #e2e8f0;
                 }
                 .customer-info div { flex: 1; }
-                .customer-info strong { color: #1f2937; font-size: 14px; display: block; margin-bottom: 5px; }
-                .customer-info p { color: #4b5563; font-size: 14px; }
-                .items-table { padding: 20px 35px; }
+                .customer-info strong { color: #1f2937; font-size: 12px; display: block; margin-bottom: 4px; }
+                .customer-info p { color: #4b5563; font-size: 13px; }
+                .items-table { padding: 15px 30px; }
                 .items-table table { width: 100%; border-collapse: collapse; }
                 .items-table th {
                     background: #f1f5f9;
-                    padding: 12px 8px;
+                    padding: 10px 8px;
                     text-align: left;
-                    font-size: 13px;
+                    font-size: 12px;
                     font-weight: 600;
                     color: #1e293b;
                     border: 1px solid #cbd5e1;
                 }
-                .items-table td { font-size: 13px; color: #334155; }
-                .items-table th:first-child, .items-table td:first-child { text-align: center; width: 50px; }
-                .items-table th:nth-child(3), .items-table td:nth-child(3) { text-align: center; width: 80px; }
-                .items-table th:nth-child(4), .items-table td:nth-child(4) { text-align: right; width: 100px; }
-                .items-table th:nth-child(5), .items-table td:nth-child(5) { text-align: right; width: 100px; }
+                .items-table td {
+                    padding: 8px;
+                    font-size: 12px;
+                    color: #334155;
+                    border: 1px solid #cbd5e1;
+                }
+                .items-table th:first-child, .items-table td:first-child { text-align: center; width: 40px; }
+                .items-table th:nth-child(3), .items-table td:nth-child(3) { text-align: center; width: 60px; }
+                .items-table th:nth-child(4), .items-table td:nth-child(4) { text-align: right; width: 80px; }
+                .items-table th:nth-child(5), .items-table td:nth-child(5) { text-align: right; width: 80px; }
                 .totals {
-                    padding: 20px 35px;
+                    padding: 15px 30px;
                     background: #f8fafc;
                     text-align: right;
                     border-top: 2px solid #e2e8f0;
                 }
-                .totals table { width: 300px; margin-left: auto; border-collapse: collapse; }
-                .totals td { padding: 8px 12px; font-size: 14px; }
+                .totals table { width: 280px; margin-left: auto; border-collapse: collapse; }
+                .totals td { padding: 6px 10px; font-size: 13px; }
                 .totals td:first-child { text-align: left; font-weight: 500; }
                 .totals td:last-child { text-align: right; font-weight: 600; }
-                .totals .grand-total td { font-size: 18px; font-weight: 800; color: #1e3a8a; border-top: 2px solid #cbd5e1; }
-                .notes { padding: 20px 35px; background: white; border-top: 1px solid #e2e8f0; font-style: italic; color: #6b7280; font-size: 13px; }
-                .footer { padding: 20px 35px; background: #f1f5f9; text-align: center; font-size: 11px; color: #64748b; }
-                @media print {
-                    body { background: white; padding: 0; margin: 0; }
-                    .invoice-container { box-shadow: none; border-radius: 0; }
+                .totals .grand-total td { font-size: 16px; font-weight: 800; color: #1e3a8a; border-top: 2px solid #cbd5e1; }
+                .notes { padding: 15px 30px; background: white; border-top: 1px solid #e2e8f0; font-style: italic; color: #6b7280; font-size: 12px; }
+                .footer { padding: 12px 30px; background: #f1f5f9; text-align: center; font-size: 10px; color: #64748b; }
+                .download-btn {
+                    display: block;
+                    width: 100%;
+                    max-width: 300px;
+                    margin: 20px auto;
+                    padding: 12px;
+                    background: #10b981;
+                    color: white;
+                    text-align: center;
+                    text-decoration: none;
+                    border-radius: 8px;
+                    font-weight: bold;
+                    cursor: pointer;
                 }
             </style>
         </head>
@@ -916,16 +844,16 @@ function generatePDFHtml(invoice) {
                 <div class="invoice-title"><h2>TAX INVOICE</h2></div>
                 <div class="customer-info">
                     <div><strong>BILL TO:</strong><p>${escapeHtml(invoice.customerName)}</p>${invoice.customerMobile ? `<p>Mobile: ${escapeHtml(invoice.customerMobile)}</p>` : ''}</div>
-                    <div><strong>INVOICE DETAILS:</strong><p>Invoice No: ${invoice.invoiceNo}</p><p>Date: ${invoice.date}</p></div>
+                    <div><strong>INVOICE DETAILS:</strong><p>No: ${invoice.invoiceNo}</p><p>Date: ${invoice.date}</p></div>
                 </div>
                 <div class="items-table">
                     <table>
-                        <thead><tr><th>#</th><th>ITEM DESCRIPTION</th><th>QTY</th><th>PRICE</th><th>TOTAL</th></tr></thead>
+                        <thead><tr><th>#</th><th>ITEM</th><th>QTY</th><th>PRICE</th><th>TOTAL</th></tr></thead>
                         <tbody>${itemsHtml}</tbody>
                     </table>
                 </div>
                 <div class="totals">
-                    <tr>
+                    <table>
                         <tr><td>Subtotal</td><td>₹ ${invoice.subtotal}</td></tr>
                         <tr><td>${gstText}</td><td>₹ ${gstAmount}</td></tr>
                         <tr class="grand-total"><td>TOTAL</td><td>₹ ${invoice.total}</td></tr>
@@ -934,10 +862,27 @@ function generatePDFHtml(invoice) {
                 <div class="notes"><p>📝 ${escapeHtml(invoice.tamilNotes || thankyouText)}</p></div>
                 <div class="footer"><p>${thankyouText} | ${poweredText}</p></div>
             </div>
-            <script>window.onload = function() { window.print(); setTimeout(function() { window.close(); }, 1000); };<\/script>
+            <div style="text-align: center; margin-top: 20px;">
+                <button onclick="window.print()" style="background: #1e3a8a; color: white; padding: 10px 20px; border: none; border-radius: 8px; font-size: 16px; cursor: pointer;">
+                    🖨️ ${currentLanguage === 'tamil' ? 'அச்சிடுக / PDF ஆக சேமிக்க' : 'Print / Save as PDF'}
+                </button>
+            </div>
+            <script>
+                // Auto trigger print dialog
+                setTimeout(() => {
+                    window.print();
+                }, 500);
+            </script>
         </body>
         </html>
     `;
+    
+    // Open print window - this works on all devices including mobile
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    
+    showToast(t.pdfOpened);
 }
 
 // Save Invoice - Main Function
@@ -1007,24 +952,8 @@ async function saveInvoice() {
     const nextNum = await getNextInvoiceNumber();
     document.getElementById('nextInvoiceNumber').textContent = nextNum;
     
-    await generateAndSaveInvoice(invoice);
-}
-
-async function generateAndSaveInvoice(invoice) {
-    const htmlContent = generatePDFHtml(invoice);
-    const blob = new Blob([htmlContent], { type: 'text/html' });
-    
-    const customerName = invoice.customerName.replace(/[^a-zA-Z0-9]/g, '_');
-    const mobile = invoice.customerMobile || 'no_mobile';
-    const fileName = `${customerName}_${mobile}.html`;
-    
-    const saved = await savePDFToDevice(blob, fileName);
-    
-    if (!saved) {
-        const printWindow = window.open('', '_blank');
-        printWindow.document.write(htmlContent);
-        printWindow.document.close();
-    }
+    // Generate PDF
+    generatePDFAndDownload(invoice, !!editingInvoiceId);
 }
 
 function escapeHtml(text) {
@@ -1143,7 +1072,7 @@ async function loadInvoices() {
             </div>
             <div class="text-xs text-gray-400 mt-1">${inv.items.length} item(s)</div>
             <div class="flex gap-2 mt-2 pt-2 border-t">
-                <button onclick="viewAndPrintInvoice(${inv.id})" class="flex-1 bg-blue-500 text-white px-2 py-1 rounded-lg text-xs"><i class="fas fa-print"></i> ${t.view}</button>
+                <button onclick="viewInvoicePDF(${inv.id})" class="flex-1 bg-blue-500 text-white px-2 py-1 rounded-lg text-xs"><i class="fas fa-file-pdf"></i> ${t.view}</button>
                 <button onclick="editInvoice(${inv.id})" class="flex-1 bg-yellow-500 text-white px-2 py-1 rounded-lg text-xs"><i class="fas fa-edit"></i> ${t.edit}</button>
                 <button onclick="deleteInvoice(${inv.id})" class="flex-1 bg-red-500 text-white px-2 py-1 rounded-lg text-xs"><i class="fas fa-trash"></i> ${t.delete}</button>
             </div>
@@ -1151,13 +1080,10 @@ async function loadInvoices() {
     `).join('');
 }
 
-async function viewAndPrintInvoice(invoiceId) {
+async function viewInvoicePDF(invoiceId) {
     const invoice = await getInvoiceById(invoiceId);
     if (invoice) {
-        const htmlContent = generatePDFHtml(invoice);
-        const printWindow = window.open('', '_blank');
-        printWindow.document.write(htmlContent);
-        printWindow.document.close();
+        generatePDFAndDownload(invoice);
     }
 }
 
@@ -1231,25 +1157,6 @@ document.getElementById('invoicePrefix').addEventListener('change', async () => 
     document.getElementById('nextInvoiceNumber').textContent = nextNum;
 });
 
-// Add Folder Selector to Settings
-function addFolderSelectorToSettings() {
-    const settingsPanel = document.getElementById('settingsPanel');
-    const themeDiv = document.getElementById('themeTitle')?.parentElement;
-    if (themeDiv && !document.getElementById('folderSelectorBtn')) {
-        const folderDiv = document.createElement('div');
-        folderDiv.className = 'mb-6 border-b pb-4';
-        folderDiv.id = 'folderSelectorDiv';
-        folderDiv.innerHTML = `
-            <h3 class="font-semibold mb-2" id="folderTitle"><i class="fas fa-folder text-yellow-600"></i> ${translations[currentLanguage].folderTitle}</h3>
-            <button id="folderSelectorBtn" onclick="requestSaveDirectory()" class="w-full bg-yellow-500 text-white px-3 py-2 rounded-lg text-sm hover:bg-yellow-600 transition">
-                <i class="fas fa-folder-open"></i> <span id="selectFolderBtnText">${translations[currentLanguage].selectFolder}</span>
-            </button>
-            <p class="text-xs text-gray-500 mt-1" id="folderInfo">${translations[currentLanguage].folderInfo}</p>
-        `;
-        themeDiv.parentElement.insertBefore(folderDiv, themeDiv);
-    }
-}
-
 // Initialize
 async function init() {
     try {
@@ -1279,9 +1186,8 @@ async function init() {
         
         loadGSTSettings();
         applyTranslations();
-        addFolderSelectorToSettings();
         
-        console.log('✅ Hosur Invoice Bill Ready! Full Bilingual Support with File Saving');
+        console.log('✅ Hosur Invoice Bill Ready! Direct PDF Generation Active');
     } catch (error) {
         console.error('Init error:', error);
     }
@@ -1301,10 +1207,9 @@ window.removeItemRow = removeItemRow;
 window.saveInvoice = saveInvoice;
 window.editInvoice = editInvoice;
 window.deleteInvoice = deleteInvoice;
-window.viewAndPrintInvoice = viewAndPrintInvoice;
+window.viewInvoicePDF = viewInvoicePDF;
 window.clearAllData = clearAllData;
 window.toggleGST = toggleGST;
 window.saveGSTSettings = saveGSTSettings;
-window.requestSaveDirectory = requestSaveDirectory;
 
 init();
