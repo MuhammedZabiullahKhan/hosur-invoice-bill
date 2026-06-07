@@ -166,6 +166,47 @@
         .btn-new-bill { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
         .btn-new-bill:active { transform: scale(0.98); }
         
+        /* Toggle Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.3s;
+            border-radius: 24px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #10b981;
+        }
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        
         @media (max-width: 640px) {
             body { padding: 8px; }
             .text-xl { font-size: 1.125rem; }
@@ -204,6 +245,26 @@
                 </button>
             </div>
             
+            <!-- GST Settings -->
+            <div class="mb-6 border-b pb-4">
+                <h3 class="font-semibold mb-2" id="gstTitle"><i class="fas fa-percent text-blue-600"></i> GST Settings</h3>
+                <div class="flex items-center justify-between mb-3">
+                    <label class="text-sm" id="gstToggleLabel">Enable GST</label>
+                    <label class="switch">
+                        <input type="checkbox" id="gstToggle" onchange="toggleGST()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div id="gstPercentageDiv" style="display: none;">
+                    <label class="block text-sm font-medium text-gray-700 mb-1 mt-2" id="gstPercentLabel">GST Percentage (%)</label>
+                    <input type="number" id="gstPercentage" value="0" min="0" max="100" step="0.5" class="w-full border-2 border-gray-300 p-2 rounded-xl">
+                    <button onclick="saveGSTSettings()" class="mt-2 w-full bg-blue-500 text-white px-3 py-2 rounded-lg text-sm hover:bg-blue-600 transition">
+                        Save GST Settings
+                    </button>
+                </div>
+                <p class="text-xs text-gray-500 mt-2" id="gstInfoText">Current GST: 0% (Disabled)</p>
+            </div>
+            
             <!-- Theme Selection -->
             <div class="mb-6 border-b pb-4">
                 <h3 class="font-semibold mb-2" id="themeTitle">🎨 Theme Color</h3>
@@ -215,26 +276,6 @@
                     <div class="theme-option" style="background: linear-gradient(135deg, #1f2937, #111827);" onclick="changeTheme('dark')" data-theme="dark"></div>
                 </div>
             </div>
-
-
-            <!-- GST Settings -->
-<div class="mb-6 border-b pb-4">
-    <h3 class="font-semibold mb-2" id="gstTitle"><i class="fas fa-percent text-blue-600"></i> GST Settings</h3>
-    <div class="flex items-center justify-between mb-2">
-        <label class="text-sm" id="gstToggleLabel">Enable GST</label>
-        <label class="relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" id="gstToggle" class="sr-only peer" onchange="toggleGST()">
-            <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:bg-blue-600 transition"></div>
-            <span class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition peer-checked:translate-x-5"></span>
-        </label>
-    </div>
-    <div id="gstPercentageDiv" style="display: none;">
-        <label class="block text-sm font-medium text-gray-700 mb-1 mt-2" id="gstPercentLabel">GST Percentage (%)</label>
-        <input type="number" id="gstPercentage" value="0" min="0" max="100" step="0.5" class="w-full border-2 border-gray-300 p-2 rounded-xl">
-        <button onclick="saveGSTSettings()" class="mt-2 w-full bg-blue-500 text-white px-3 py-1 rounded-lg text-sm">Save GST Settings</button>
-    </div>
-    <p class="text-xs text-gray-500 mt-2" id="gstInfoText">Current GST: 0% (Disabled)</p>
-</div>
             
             <!-- Clear Data -->
             <div class="mb-6 border-b pb-4">
@@ -321,7 +362,7 @@
         <div class="bg-yellow-50 border-l-4 border-yellow-400 rounded-xl p-2 md:p-3 mb-4 no-print animate-slideInLeft">
             <div class="flex items-center gap-2 text-xs md:text-sm">
                 <i class="fas fa-lightbulb text-yellow-600"></i>
-                <span id="tipText">💡 Tip: Start typing - auto suggestions appear! Upload your payment QR in Settings!</span>
+                <span id="tipText">💡 Tip: Start typing - auto suggestions appear! Configure GST in Settings!</span>
             </div>
         </div>
 
@@ -401,7 +442,7 @@
             <div class="bg-gray-50 rounded-xl p-4 mb-4">
                 <div class="flex flex-wrap justify-end gap-3 text-right">
                     <div><span id="subtotalLabel">Subtotal</span>: ₹<span id="subtotal">0</span></div>
-                    <div><span id="gstLabel">GST (5%)</span>: ₹<span id="gstAmount">0</span></div>
+                    <div><span id="gstLabel">GST</span>: ₹<span id="gstAmount">0</span></div>
                     <div class="font-bold text-blue-700"><span id="totalLabel">Total</span>: ₹<span id="grandTotal">0</span></div>
                 </div>
             </div>
@@ -454,6 +495,14 @@
         }
         updateClock();
         setInterval(updateClock, 1000);
+        
+        // Ensure GST toggle works
+        document.addEventListener('DOMContentLoaded', function() {
+            const gstToggle = document.getElementById('gstToggle');
+            if (gstToggle && typeof loadGSTSettings === 'function') {
+                loadGSTSettings();
+            }
+        });
     </script>
 </body>
 </html>
