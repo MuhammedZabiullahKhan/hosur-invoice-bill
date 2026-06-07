@@ -1,10 +1,11 @@
-// Hosur Invoice Bill - Complete Application
+// Hosur Invoice Bill - Complete Application with Frontend File Management
 // Created by Shri Muhammed Zabiullah Khan
 
 let db;
 let currentLanguage = 'tamil';
 let itemCounter = 0;
 let editingInvoiceId = null;
+let rootDirectoryHandle = null; // For File System Access API
 
 // GST Settings
 let gstEnabled = false;
@@ -133,7 +134,10 @@ const translations = {
         themeChanged: "வண்ண தீம் மாற்றப்பட்டது",
         qrUploadSuccess: "QR பதிவேற்றப்பட்டது!",
         qrRemoved: "QR நீக்கப்பட்டது",
-        newBillReady: "✅ புதிய பில்லுக்கு தயார்!"
+        newBillReady: "✅ புதிய பில்லுக்கு தயார்!",
+        selectFolder: "சேமிப்பு கோப்புறையை தேர்ந்தெடுக்கவும்",
+        folderSelected: "✅ கோப்புறை தேர்ந்தெடுக்கப்பட்டது",
+        pdfSaved: "✅ PDF சேமிக்கப்பட்டது"
     },
     english: {
         appTitle: "🏪 Hosur Invoice Bill",
@@ -201,7 +205,10 @@ const translations = {
         themeChanged: "Theme changed",
         qrUploadSuccess: "QR uploaded!",
         qrRemoved: "QR removed",
-        newBillReady: "✅ Ready for new bill!"
+        newBillReady: "✅ Ready for new bill!",
+        selectFolder: "Select Save Folder",
+        folderSelected: "✅ Folder selected",
+        pdfSaved: "✅ PDF saved"
     }
 };
 
@@ -348,7 +355,92 @@ function resetForNewBill() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// Database Functions
+// ============ File System Access API Functions ============
+
+// Request permission to save files
+async function requestSaveDirectory() {
+    try {
+        // Check if File System Access API is supported
+        if ('showDirectoryPicker' in window) {
+            rootDirectoryHandle = await window.showDirectoryPicker();
+            localStorage.setItem('saveDirectoryPermission', 'granted');
+            showToast(translations[currentLanguage].folderSelected);
+            return true;
+        } else {
+            // Fallback for browsers that don't support the API
+            showToast('Your browser doesn\'t support file saving. Use Save as PDF from print dialog.');
+            return false;
+        }
+    } catch (error) {
+        if (error.name !== 'AbortError') {
+            console.error('Error selecting directory:', error);
+            showToast('Could not select directory. Using print fallback.');
+        }
+        return false;
+    }
+}
+
+// Get today's folder (create if not exists)
+async function getTodaysFolder() {
+    if (!rootDirectoryHandle) return null;
+    
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    const folderName = `${year}-${month}-${day}`;
+    
+    try {
+        // Try to get existing folder
+        let folderHandle = await rootDirectoryHandle.getDirectoryHandle(folderName, { create: false });
+        return folderHandle;
+    } catch (e) {
+        // Folder doesn't exist, create it
+        try {
+            let folderHandle = await rootDirectoryHandle.getDirectoryHandle(folderName, { create: true });
+            return folderHandle;
+        } catch (err) {
+            console.error('Error creating folder:', err);
+            return null;
+        }
+    }
+}
+
+// Save PDF file to the selected directory
+async function savePDFToDevice(pdfBlob, fileName) {
+    if (!rootDirectoryHandle) {
+        // Ask user to select folder first
+        const t = translations[currentLanguage];
+        const confirmed = confirm(`${t.selectFolder}?`);
+        if (confirmed) {
+            const success = await requestSaveDirectory();
+            if (!success) return false;
+        } else {
+            return false;
+        }
+    }
+    
+    try {
+        const todayFolder = await getTodaysFolder();
+        if (!todayFolder) return false;
+        
+        // Create the file
+        const fileHandle = await todayFolder.getFileHandle(fileName, { create: true });
+        const writable = await fileHandle.createWritable();
+        await writable.write(pdfBlob);
+        await writable.close();
+        
+        showToast(`${translations[currentLanguage].pdfSaved}: ${fileName}`);
+        return true;
+    } catch (error) {
+        console.error('Error saving PDF:', error);
+        showToast('Could not save PDF. Using print fallback.');
+        return false;
+    }
+}
+
+// ============ Database Functions ============
+
 function initDB() {
     return new Promise((resolve, reject) => {
         const request = indexedDB.open('HosurInvoiceDB', 3);
@@ -633,7 +725,139 @@ function initializeFirstRow() {
     }
 }
 
-// Professional Print Function with Save to Server
+// Generate HTML content for PDF
+function generatePDFHtml(invoice) {
+    const itemsHtml = invoice.items.map((item, index) => `
+        <tr style="border-bottom: 1px solid #e5e7eb;">
+            <td style="padding: 12px 8px; text-align: center; border: 1px solid #ddd;">${index + 1}</td>
+            <td style="padding: 12px 8px; text-align: left; border: 1px solid #ddd;">${escapeHtml(item.name)}</td>
+            <td style="padding: 12px 8px; text-align: center; border: 1px solid #ddd;">${item.qty}</td>
+            <td style="padding: 12px 8px; text-align: right; border: 1px solid #ddd;">₹ ${item.price.toFixed(2)}</td>
+            <td style="padding: 12px 8px; text-align: right; border: 1px solid #ddd;">₹ ${item.total.toFixed(2)}</td>
+        </tr>
+    `).join('');
+    
+    const gstText = gstEnabled ? `GST (${gstPercentage}%)` : 'GST';
+    const gstAmount = gstEnabled ? parseFloat(invoice.gst).toFixed(2) : '0.00';
+    
+    return `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>Invoice ${invoice.invoiceNo}</title>
+            <style>
+                * { margin: 0; padding: 0; box-sizing: border-box; }
+                body {
+                    font-family: 'Inter', 'Noto Sans Tamil', Arial, sans-serif;
+                    background: #f0f2f5;
+                    padding: 40px 20px;
+                    display: flex;
+                    justify-content: center;
+                }
+                .invoice-container {
+                    max-width: 900px;
+                    width: 100%;
+                    background: white;
+                    border-radius: 16px;
+                    box-shadow: 0 20px 35px -10px rgba(0,0,0,0.15);
+                    overflow: hidden;
+                }
+                .invoice-header {
+                    background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+                    color: white;
+                    padding: 30px 35px;
+                    text-align: center;
+                }
+                .invoice-header h1 { font-size: 28px; margin-bottom: 5px; }
+                .invoice-header p { font-size: 14px; opacity: 0.9; }
+                .invoice-title {
+                    background: #f8fafc;
+                    padding: 15px 35px;
+                    border-bottom: 2px solid #e2e8f0;
+                }
+                .invoice-title h2 { color: #1e3a8a; font-size: 20px; }
+                .customer-info {
+                    padding: 20px 35px;
+                    background: #f8fafc;
+                    display: flex;
+                    justify-content: space-between;
+                    flex-wrap: wrap;
+                    gap: 20px;
+                    border-bottom: 1px solid #e2e8f0;
+                }
+                .customer-info div { flex: 1; }
+                .customer-info strong { color: #1f2937; font-size: 14px; display: block; margin-bottom: 5px; }
+                .customer-info p { color: #4b5563; font-size: 14px; }
+                .items-table { padding: 20px 35px; }
+                .items-table table { width: 100%; border-collapse: collapse; }
+                .items-table th {
+                    background: #f1f5f9;
+                    padding: 12px 8px;
+                    text-align: left;
+                    font-size: 13px;
+                    font-weight: 600;
+                    color: #1e293b;
+                    border: 1px solid #cbd5e1;
+                }
+                .items-table td { font-size: 13px; color: #334155; }
+                .items-table th:first-child, .items-table td:first-child { text-align: center; width: 50px; }
+                .items-table th:nth-child(3), .items-table td:nth-child(3) { text-align: center; width: 80px; }
+                .items-table th:nth-child(4), .items-table td:nth-child(4) { text-align: right; width: 100px; }
+                .items-table th:nth-child(5), .items-table td:nth-child(5) { text-align: right; width: 100px; }
+                .totals {
+                    padding: 20px 35px;
+                    background: #f8fafc;
+                    text-align: right;
+                    border-top: 2px solid #e2e8f0;
+                }
+                .totals table { width: 300px; margin-left: auto; border-collapse: collapse; }
+                .totals td { padding: 8px 12px; font-size: 14px; }
+                .totals td:first-child { text-align: left; font-weight: 500; }
+                .totals td:last-child { text-align: right; font-weight: 600; }
+                .totals .grand-total td { font-size: 18px; font-weight: 800; color: #1e3a8a; border-top: 2px solid #cbd5e1; }
+                .notes { padding: 20px 35px; background: white; border-top: 1px solid #e2e8f0; font-style: italic; color: #6b7280; font-size: 13px; }
+                .footer { padding: 20px 35px; background: #f1f5f9; text-align: center; font-size: 11px; color: #64748b; }
+                @media print {
+                    body { background: white; padding: 0; margin: 0; }
+                    .invoice-container { box-shadow: none; border-radius: 0; }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="invoice-container">
+                <div class="invoice-header">
+                    <h1>${escapeHtml(invoice.businessName)}</h1>
+                    <p>${escapeHtml(invoice.businessContact)}</p>
+                </div>
+                <div class="invoice-title"><h2>TAX INVOICE</h2></div>
+                <div class="customer-info">
+                    <div><strong>BILL TO:</strong><p>${escapeHtml(invoice.customerName)}</p>${invoice.customerMobile ? `<p>Mobile: ${escapeHtml(invoice.customerMobile)}</p>` : ''}</div>
+                    <div><strong>INVOICE DETAILS:</strong><p>Invoice No: ${invoice.invoiceNo}</p><p>Date: ${invoice.date}</p></div>
+                </div>
+                <div class="items-table">
+                    <table>
+                        <thead><tr><th>#</th><th>ITEM DESCRIPTION</th><th>QTY</th><th>PRICE</th><th>TOTAL</th></tr></thead>
+                        <tbody>${itemsHtml}</tbody>
+                    </table>
+                </div>
+                <div class="totals">
+                    <table>
+                        <tr><td>Subtotal</td><td>₹ ${invoice.subtotal}</td></tr>
+                        <tr><td>${gstText}</td><td>₹ ${gstAmount}</td></tr>
+                        <tr class="grand-total"><td>TOTAL</td><td>₹ ${invoice.total}</td></tr>
+                    </table>
+                </div>
+                <div class="notes"><p>📝 ${escapeHtml(invoice.tamilNotes)}</p></div>
+                <div class="footer"><p>Thank you for your business! | Powered by Hosur Invoice Bill</p></div>
+            </div>
+            <script>window.onload = function() { window.print(); setTimeout(function() { window.close(); }, 1000); };<\/script>
+        </body>
+        </html>
+    `;
+}
+
+// Professional Print Function with File Saving
 async function saveInvoice() {
     const t = translations[currentLanguage];
     const businessName = document.getElementById('businessName').value || 'My Business';
@@ -694,332 +918,28 @@ async function saveInvoice() {
     const nextNum = await getNextInvoiceNumber();
     document.getElementById('nextInvoiceNumber').textContent = nextNum;
     
-    // Generate Professional Print
-    await generateAndPrintProfessionalInvoice(invoice);
-    
-    // Try to save to server if online
-    if (navigator.onLine) {
-        saveInvoiceToServer(invoice);
-    }
+    // Generate and save/print the invoice
+    await generateAndSaveInvoice(invoice);
 }
 
-// Save invoice to server for PDF storage
-async function saveInvoiceToServer(invoice) {
-    try {
-        const response = await fetch('/api/save-invoice', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(invoice)
-        });
-        if (response.ok) {
-            console.log('Invoice saved to server');
-        }
-    } catch (error) {
-        console.log('Server not available, invoice saved locally only');
+async function generateAndSaveInvoice(invoice) {
+    const htmlContent = generatePDFHtml(invoice);
+    const blob = new Blob([htmlContent], { type: 'text/html' });
+    
+    // Create a safe filename
+    const customerName = invoice.customerName.replace(/[^a-zA-Z0-9]/g, '_');
+    const mobile = invoice.customerMobile || 'no_mobile';
+    const fileName = `${customerName}_${mobile}.html`;
+    
+    // Try to save to device using File System Access API
+    const saved = await savePDFToDevice(blob, fileName);
+    
+    if (!saved) {
+        // Fallback: Open print dialog (user can Save as PDF)
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(htmlContent);
+        printWindow.document.close();
     }
-}
-
-// Professional Print Function
-function generateAndPrintProfessionalInvoice(invoice) {
-    const printWindow = window.open('', '_blank');
-    
-    // Create professional HTML for printing
-    const itemsHtml = invoice.items.map((item, index) => `
-        <tr style="border-bottom: 1px solid #e5e7eb;">
-            <td style="padding: 12px 8px; text-align: left; border-bottom: 1px solid #e5e7eb;">${index + 1}</td>
-            <td style="padding: 12px 8px; text-align: left; border-bottom: 1px solid #e5e7eb;">${escapeHtml(item.name)}</td>
-            <td style="padding: 12px 8px; text-align: center; border-bottom: 1px solid #e5e7eb;">${item.qty}</td>
-            <td style="padding: 12px 8px; text-align: right; border-bottom: 1px solid #e5e7eb;">₹ ${item.price.toFixed(2)}</td>
-            <td style="padding: 12px 8px; text-align: right; border-bottom: 1px solid #e5e7eb;">₹ ${item.total.toFixed(2)}</td>
-        </tr>
-    `).join('');
-    
-    const gstText = gstEnabled ? `GST (${gstPercentage}%)` : 'GST';
-    const gstAmount = gstEnabled ? parseFloat(invoice.gst).toFixed(2) : '0.00';
-    
-    printWindow.document.write(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Invoice ${invoice.invoiceNo}</title>
-            <meta charset="UTF-8">
-            <style>
-                * {
-                    margin: 0;
-                    padding: 0;
-                    box-sizing: border-box;
-                }
-                body {
-                    font-family: 'Inter', 'Noto Sans Tamil', Arial, sans-serif;
-                    background: #f0f2f5;
-                    padding: 40px 20px;
-                    display: flex;
-                    justify-content: center;
-                }
-                .invoice-container {
-                    max-width: 900px;
-                    width: 100%;
-                    background: white;
-                    border-radius: 16px;
-                    box-shadow: 0 20px 35px -10px rgba(0,0,0,0.15);
-                    overflow: hidden;
-                }
-                .invoice-header {
-                    background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
-                    color: white;
-                    padding: 30px 35px;
-                    text-align: center;
-                }
-                .invoice-header h1 {
-                    font-size: 28px;
-                    margin-bottom: 5px;
-                    letter-spacing: 1px;
-                }
-                .invoice-header p {
-                    font-size: 14px;
-                    opacity: 0.9;
-                }
-                .invoice-title {
-                    background: #f8fafc;
-                    padding: 15px 35px;
-                    border-bottom: 2px solid #e2e8f0;
-                }
-                .invoice-title h2 {
-                    color: #1e3a8a;
-                    font-size: 20px;
-                    font-weight: 600;
-                }
-                .business-info {
-                    padding: 25px 35px;
-                    background: white;
-                    border-bottom: 1px solid #e2e8f0;
-                }
-                .business-info h3 {
-                    color: #1f2937;
-                    font-size: 18px;
-                    margin-bottom: 8px;
-                }
-                .business-info p {
-                    color: #4b5563;
-                    font-size: 14px;
-                    line-height: 1.5;
-                }
-                .customer-info {
-                    padding: 20px 35px;
-                    background: #f8fafc;
-                    display: flex;
-                    justify-content: space-between;
-                    flex-wrap: wrap;
-                    gap: 20px;
-                    border-bottom: 1px solid #e2e8f0;
-                }
-                .customer-info div {
-                    flex: 1;
-                }
-                .customer-info strong {
-                    color: #1f2937;
-                    font-size: 14px;
-                    display: block;
-                    margin-bottom: 5px;
-                }
-                .customer-info p {
-                    color: #4b5563;
-                    font-size: 14px;
-                }
-                .invoice-details {
-                    padding: 20px 35px;
-                    background: white;
-                    display: flex;
-                    justify-content: space-between;
-                    border-bottom: 1px solid #e2e8f0;
-                }
-                .invoice-details div {
-                    text-align: center;
-                    flex: 1;
-                }
-                .invoice-details strong {
-                    color: #6b7280;
-                    font-size: 12px;
-                    display: block;
-                    margin-bottom: 5px;
-                }
-                .invoice-details p {
-                    color: #1f2937;
-                    font-size: 16px;
-                    font-weight: 600;
-                }
-                .items-table {
-                    padding: 20px 35px;
-                }
-                .items-table table {
-                    width: 100%;
-                    border-collapse: collapse;
-                }
-                .items-table th {
-                    background: #f1f5f9;
-                    padding: 12px 8px;
-                    text-align: left;
-                    font-size: 13px;
-                    font-weight: 600;
-                    color: #1e293b;
-                    border: 1px solid #cbd5e1;
-                }
-                .items-table th:first-child { width: 50px; text-align: center; }
-                .items-table th:nth-child(2) { text-align: left; }
-                .items-table th:nth-child(3) { text-align: center; width: 80px; }
-                .items-table th:nth-child(4) { text-align: right; width: 100px; }
-                .items-table th:nth-child(5) { text-align: right; width: 100px; }
-                .items-table td {
-                    padding: 10px 8px;
-                    font-size: 13px;
-                    color: #334155;
-                    border: 1px solid #cbd5e1;
-                }
-                .items-table td:first-child { text-align: center; }
-                .items-table td:nth-child(3) { text-align: center; }
-                .items-table td:nth-child(4) { text-align: right; }
-                .items-table td:nth-child(5) { text-align: right; }
-                .totals {
-                    padding: 20px 35px;
-                    background: #f8fafc;
-                    text-align: right;
-                    border-top: 2px solid #e2e8f0;
-                }
-                .totals table {
-                    width: 300px;
-                    margin-left: auto;
-                    border-collapse: collapse;
-                }
-                .totals td {
-                    padding: 8px 12px;
-                    font-size: 14px;
-                }
-                .totals td:first-child {
-                    text-align: left;
-                    font-weight: 500;
-                    color: #475569;
-                }
-                .totals td:last-child {
-                    text-align: right;
-                    font-weight: 600;
-                    color: #1f2937;
-                }
-                .totals .grand-total td {
-                    font-size: 18px;
-                    font-weight: 800;
-                    color: #1e3a8a;
-                    border-top: 2px solid #cbd5e1;
-                    padding-top: 12px;
-                }
-                .notes {
-                    padding: 20px 35px;
-                    background: white;
-                    border-top: 1px solid #e2e8f0;
-                    font-style: italic;
-                    color: #6b7280;
-                    font-size: 13px;
-                }
-                .footer {
-                    padding: 20px 35px;
-                    background: #f1f5f9;
-                    text-align: center;
-                    font-size: 11px;
-                    color: #64748b;
-                    border-top: 1px solid #e2e8f0;
-                }
-                @media print {
-                    body {
-                        background: white;
-                        padding: 0;
-                        margin: 0;
-                    }
-                    .invoice-container {
-                        box-shadow: none;
-                        border-radius: 0;
-                    }
-                    .no-print {
-                        display: none;
-                    }
-                }
-            </style>
-        </head>
-        <body>
-            <div class="invoice-container">
-                <div class="invoice-header">
-                    <h1>${escapeHtml(invoice.businessName)}</h1>
-                    <p>${escapeHtml(invoice.businessContact)}</p>
-                </div>
-                
-                <div class="invoice-title">
-                    <h2>TAX INVOICE</h2>
-                </div>
-                
-                <div class="customer-info">
-                    <div>
-                        <strong>BILL TO:</strong>
-                        <p>${escapeHtml(invoice.customerName)}</p>
-                        ${invoice.customerMobile ? `<p>Mobile: ${escapeHtml(invoice.customerMobile)}</p>` : ''}
-                    </div>
-                    <div>
-                        <strong>INVOICE DETAILS:</strong>
-                        <p>Invoice No: ${invoice.invoiceNo}</p>
-                        <p>Date: ${invoice.date}</p>
-                    </div>
-                </div>
-                
-                <div class="items-table">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>ITEM DESCRIPTION</th>
-                                <th>QTY</th>
-                                <th>PRICE</th>
-                                <th>TOTAL</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${itemsHtml}
-                        </tbody>
-                    </table>
-                </div>
-                
-                <div class="totals">
-                    <table>
-                        <tr>
-                            <td>Subtotal</td>
-                            <td>₹ ${invoice.subtotal}</td>
-                        </tr>
-                        <tr>
-                            <td>${gstText}</td>
-                            <td>₹ ${gstAmount}</td>
-                        </tr>
-                        <tr class="grand-total">
-                            <td>TOTAL</td>
-                            <td>₹ ${invoice.total}</td>
-                        </tr>
-                    </table>
-                </div>
-                
-                <div class="notes">
-                    <p>📝 ${escapeHtml(invoice.tamilNotes)}</p>
-                </div>
-                
-                <div class="footer">
-                    <p>Thank you for your business!</p>
-                    <p>Powered by Hosur Invoice Bill | www.hosurinvoice.com</p>
-                </div>
-            </div>
-            <script>
-                window.onload = function() {
-                    window.print();
-                    setTimeout(function() { window.close(); }, 1000);
-                };
-            <\/script>
-        </body>
-        </html>
-    `);
-    printWindow.document.close();
 }
 
 function escapeHtml(text) {
@@ -1115,7 +1035,12 @@ async function loadInvoices() {
 
 async function viewAndPrintInvoice(invoiceId) {
     const invoice = await getInvoiceById(invoiceId);
-    if (invoice) generateAndPrintProfessionalInvoice(invoice);
+    if (invoice) {
+        const htmlContent = generatePDFHtml(invoice);
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(htmlContent);
+        printWindow.document.close();
+    }
 }
 
 async function clearAllData() {
@@ -1188,6 +1113,30 @@ document.getElementById('invoicePrefix').addEventListener('change', async () => 
     document.getElementById('nextInvoiceNumber').textContent = nextNum;
 });
 
+// Add Select Folder button to settings
+function addFolderSelectorToSettings() {
+    const settingsPanel = document.getElementById('settingsPanel');
+    const themeDiv = document.getElementById('themeTitle')?.parentElement;
+    if (themeDiv && !document.getElementById('folderSelectorBtn')) {
+        const folderDiv = document.createElement('div');
+        folderDiv.className = 'mb-6 border-b pb-4';
+        folderDiv.innerHTML = `
+            <h3 class="font-semibold mb-2"><i class="fas fa-folder text-yellow-600"></i> <span id="folderTitle">Save Location</span></h3>
+            <button id="folderSelectorBtn" onclick="requestSaveDirectory()" class="w-full bg-yellow-500 text-white px-3 py-2 rounded-lg text-sm hover:bg-yellow-600 transition">
+                <i class="fas fa-folder-open"></i> <span id="selectFolderBtnText">Select Save Folder</span>
+            </button>
+            <p class="text-xs text-gray-500 mt-1" id="folderInfo">Choose where to save invoice files</p>
+        `;
+        themeDiv.parentElement.insertBefore(folderDiv, themeDiv);
+        
+        // Update translations for folder selector
+        const t = translations[currentLanguage];
+        document.getElementById('folderTitle').textContent = t.selectFolder || 'Save Location';
+        const selectBtn = document.getElementById('selectFolderBtnText');
+        if (selectBtn) selectBtn.textContent = t.selectFolder || 'Select Save Folder';
+    }
+}
+
 // Initialize
 async function init() {
     try {
@@ -1217,8 +1166,9 @@ async function init() {
         
         loadGSTSettings();
         applyTranslations();
+        addFolderSelectorToSettings();
         
-        console.log('✅ Hosur Invoice Bill Ready!');
+        console.log('✅ Hosur Invoice Bill Ready! Frontend File Management Active');
     } catch (error) {
         console.error('Init error:', error);
     }
@@ -1242,5 +1192,6 @@ window.viewAndPrintInvoice = viewAndPrintInvoice;
 window.clearAllData = clearAllData;
 window.toggleGST = toggleGST;
 window.saveGSTSettings = saveGSTSettings;
+window.requestSaveDirectory = requestSaveDirectory;
 
 init();
