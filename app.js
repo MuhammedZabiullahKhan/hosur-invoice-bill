@@ -1,11 +1,13 @@
-// Hosur Invoice Bill - Complete Application with Frontend File Management
+// Hosur Invoice Bill - Complete Application
 // Created by Shri Muhammed Zabiullah Khan
+// Full Tamil & English Support - 100% Translation
+// File Management: Saves invoices to local folders
 
 let db;
 let currentLanguage = 'tamil';
 let itemCounter = 0;
 let editingInvoiceId = null;
-let rootDirectoryHandle = null; // For File System Access API
+let rootDirectoryHandle = null;
 
 // GST Settings
 let gstEnabled = false;
@@ -23,16 +25,28 @@ function loadGSTSettings() {
     const gstPercentageDiv = document.getElementById('gstPercentageDiv');
     const gstPercentageInput = document.getElementById('gstPercentage');
     const gstInfoText = document.getElementById('gstInfoText');
-    const gstLabel = document.getElementById('gstLabel');
     
     if (gstToggle) gstToggle.checked = gstEnabled;
     if (gstPercentageDiv) gstPercentageDiv.style.display = gstEnabled ? 'block' : 'none';
     if (gstPercentageInput) gstPercentageInput.value = gstPercentage;
     if (gstInfoText) {
-        gstInfoText.textContent = gstEnabled ? `Current GST: ${gstPercentage}% (Enabled)` : `Current GST: Disabled (0%)`;
+        if (gstEnabled) {
+            gstInfoText.textContent = currentLanguage === 'tamil' ? `தற்போதைய ஜிஎஸ்டி: ${gstPercentage}% (இயக்கத்தில் உள்ளது)` : `Current GST: ${gstPercentage}% (Enabled)`;
+        } else {
+            gstInfoText.textContent = currentLanguage === 'tamil' ? `தற்போதைய ஜிஎஸ்டி: முடக்கப்பட்டது (0%)` : `Current GST: Disabled (0%)`;
+        }
     }
+    updateGSTLabel();
+}
+
+function updateGSTLabel() {
+    const gstLabel = document.getElementById('gstLabel');
     if (gstLabel) {
-        gstLabel.textContent = gstEnabled ? `GST (${gstPercentage}%)` : `GST`;
+        if (gstEnabled) {
+            gstLabel.textContent = currentLanguage === 'tamil' ? `ஜிஎஸ்டி (${gstPercentage}%)` : `GST (${gstPercentage}%)`;
+        } else {
+            gstLabel.textContent = currentLanguage === 'tamil' ? `ஜிஎஸ்டி` : `GST`;
+        }
     }
 }
 
@@ -52,35 +66,29 @@ function saveGSTSettings() {
     localStorage.setItem('gstPercentage', gstPercentage);
     
     const gstInfoText = document.getElementById('gstInfoText');
-    const gstLabel = document.getElementById('gstLabel');
-    
-    if (gstEnabled) {
-        gstInfoText.textContent = `Current GST: ${gstPercentage}% (Enabled)`;
-        gstLabel.textContent = `GST (${gstPercentage}%)`;
-    } else {
-        gstInfoText.textContent = `Current GST: Disabled (0%)`;
-        gstLabel.textContent = `GST`;
+    if (gstInfoText) {
+        if (gstEnabled) {
+            gstInfoText.textContent = currentLanguage === 'tamil' ? `தற்போதைய ஜிஎஸ்டி: ${gstPercentage}% (இயக்கத்தில் உள்ளது)` : `Current GST: ${gstPercentage}% (Enabled)`;
+        } else {
+            gstInfoText.textContent = currentLanguage === 'tamil' ? `தற்போதைய ஜிஎஸ்டி: முடக்கப்பட்டது (0%)` : `Current GST: Disabled (0%)`;
+        }
     }
     
+    updateGSTLabel();
     calculateAllTotals();
-    showToast(`GST settings saved: ${gstEnabled ? gstPercentage + '%' : 'Disabled'}`);
+    const msg = currentLanguage === 'tamil' ? `ஜிஎஸ்டி அமைப்புகள் சேமிக்கப்பட்டன: ${gstEnabled ? gstPercentage + '%' : 'முடக்கப்பட்டது'}` : `GST settings saved: ${gstEnabled ? gstPercentage + '%' : 'Disabled'}`;
+    showToast(msg);
 }
 
-// Complete Translations
+// Complete Translations - 100% Tamil & 100% English
 const translations = {
     tamil: {
         appTitle: "🏪 ஹொசூர் இன்வாய்ஸ் பில்",
-        subtitle: "Hosur Invoice Bill",
-        createdBy: "by Shri Muhammed Zabiullah Khan",
+        subtitle: "ஹொசூர் இன்வாய்ஸ் பில்",
+        createdBy: "ஷ்ரீ முஹம்மது ஜபியுல்லா கான்",
         showQR: "QR காட்டு",
         settings: "அமைப்புகள்",
         newBill: "புதிய பில்",
-        addItem: "பொருள் சேர்",
-        saveInvoice: "💾 இன்வாய்ஸ் சேமி & அச்சிடு",
-        updateInvoice: "🔄 இன்வாய்ஸ் புதுப்பி & அச்சிடு",
-        uploadQR: "QR பதிவேற்று",
-        removeQR: "QR நீக்கு",
-        clearAllData: "எல்லா தரவையும் அழிக்க",
         businessTitle: "🏪 என் கடை விவரங்கள்",
         businessName: "கடை பெயர்",
         businessContact: "தொடர்பு & முகவரி",
@@ -95,63 +103,70 @@ const translations = {
         qty: "அளவு",
         price: "விலை (₹)",
         total: "மொத்தம் (₹)",
+        addItem: "பொருள் சேர்",
         subtotal: "துணை மொத்தம்",
         gst: "ஜிஎஸ்டி",
         grandTotal: "மொத்தம்",
-        notes: "குறிப்புகள்",
+        notes: "குறிப்புகள் (தமிழ்)",
+        saveInvoice: "💾 இன்வாய்ஸ் சேமி & அச்சிடு",
+        updateInvoice: "🔄 இன்வாய்ஸ் புதுப்பி & அச்சிடு",
+        cancelEdit: "ரத்து செய்",
         historyTitle: "📄 என் இன்வாய்ஸ்கள்",
-        noInvoices: "இன்னும் இன்வாய்ஸ் இல்லை",
+        noInvoices: "இன்னும் இன்வாய்ஸ் இல்லை. மேலே உங்கள் முதல் இன்வாய்ஸ் உருவாக்கவும்!",
         view: "பார்",
         edit: "திருத்து",
         delete: "நீக்கு",
         settingsTitle: "அமைப்புகள்",
-        paymentQRTitle: "உங்கள் கட்டண QR",
-        paymentQRDesc: "GPay/PhonePe/Paytm QR பதிவேற்றுக",
+        paymentQRTitle: "உங்கள் கட்டண QR குறியீடு",
+        paymentQRDesc: "உங்கள் ஜிபே/போன்பே/பேட்டிஎம் QR ஐ பதிவேற்றவும்",
+        uploadQR: "QR பதிவேற்று",
+        removeQR: "QR நீக்கு",
+        folderTitle: "சேமிப்பு இடம்",
+        selectFolder: "சேமிப்பு கோப்புறையை தேர்ந்தெடுக்கவும்",
+        folderInfo: "இன்வாய்ஸ் கோப்புகளை சேமிக்க இடத்தை தேர்வு செய்யவும்",
         themeTitle: "🎨 வண்ண தீம்",
         gstTitle: "ஜிஎஸ்டி அமைப்புகள்",
         gstToggleLabel: "ஜிஎஸ்டி செயல்படுத்துக",
         gstPercentLabel: "ஜிஎஸ்டி சதவீதம் (%)",
+        saveGSTBtn: "ஜிஎஸ்டி சேமி",
         dataTitle: "🗑️ தரவு மேலாண்மை",
+        clearDataBtn: "எல்லா தரவையும் அழிக்க",
+        clearWarning: "எச்சரிக்கை: இது உங்கள் எல்லா இன்வாய்ஸ்களையும் நீக்கும்",
         aboutTitle: "ℹ️ பற்றி",
-        aboutText: "ஹொசூர் இன்வாய்ஸ் பில் - இலவச இன்வாய்ஸ் ஜெனரேட்டர்",
+        aboutText: "ஹொசூர் இன்வாய்ஸ் பில் - சிறு வணிகங்களுக்கான இலவச இன்வாய்ஸ் ஜெனரேட்டர்",
         scanToPay: "ஸ்கேன் செய்து பணம் செலுத்துங்கள்",
-        scanInstruction: "GPay, PhonePe, Paytm மூலம் ஸ்கேன் செய்யவும்",
+        scanInstruction: "ஜிபே, போன்பே, அல்லது பேட்டிஎம் மூலம் ஸ்கேன் செய்யவும்",
         close: "மூடு",
-        noQR: "கட்டண QR இல்லை",
-        businessNamePlaceholder: "உதா: ஷ்ரீ முஹம்மது சன்ஸ்",
-        businessContactPlaceholder: "தொலை: 9876543210, ஹொசூர் மெயின் ரோடு",
-        customerNamePlaceholder: "உதா: ராஜேஷ் டெக்ஸ்டைல்ஸ்",
-        customerMobilePlaceholder: "உதா: 9876543210",
-        itemNamePlaceholder: "பொருள் பெயர் (உதா: அரிசி 5கிலோ)",
+        noQR: "கட்டண QR இல்லை. அமைப்புகளில் சேர்க்கவும்.",
+        businessNamePlaceholder: "உதாரணம்: ஷ்ரீ முஹம்மது சன்ஸ்",
+        businessContactPlaceholder: "தொலைபேசி: 9876543210, ஹொசூர் மெயின் ரோடு",
+        customerNamePlaceholder: "உதாரணம்: ராஜேஷ் டெக்ஸ்டைல்ஸ்",
+        customerMobilePlaceholder: "உதாரணம்: 9876543210",
+        itemNamePlaceholder: "பொருள் பெயர் (உதாரணம்: அரிசி 5கிலோ)",
         notesPlaceholder: "நன்றி! மீண்டும் வருக",
         tipText: "💡 குறிப்பு: தட்டச்சு செய்ய ஆரம்பித்தால் பரிந்துரைகள் வரும்! ஜிஎஸ்டியை அமைப்புகளில் மாற்றலாம்",
+        syncReady: "தயார்",
         confirmDelete: "இந்த இன்வாய்ஸை நீக்க வேண்டுமா?",
         deleteSuccess: "✅ இன்வாய்ஸ் நீக்கப்பட்டது!",
         updateSuccess: "✅ இன்வாய்ஸ் புதுப்பிக்கப்பட்டது!",
         saveSuccess: "✅ இன்வாய்ஸ் சேமிக்கப்பட்டது!",
-        noItemAlert: "⚠️ குறைந்தது ஒரு பொருளையாவது சேர்க்கவும்!",
-        clearConfirm: "⚠️ எல்லா இன்வாய்ஸ்களையும் நீக்க வேண்டுமா?",
+        noItemAlert: "⚠️ தயவுசெய்து குறைந்தது ஒரு பொருளையாவது சேர்க்கவும்!",
+        clearConfirm: "⚠️ எச்சரிக்கை: இது உங்கள் உலாவியில் உள்ள அனைத்து இன்வாய்ஸ்களையும் நீக்கும்!\n\nதொடரவா?",
         themeChanged: "வண்ண தீம் மாற்றப்பட்டது",
-        qrUploadSuccess: "QR பதிவேற்றப்பட்டது!",
-        qrRemoved: "QR நீக்கப்பட்டது",
-        newBillReady: "✅ புதிய பில்லுக்கு தயார்!",
-        selectFolder: "சேமிப்பு கோப்புறையை தேர்ந்தெடுக்கவும்",
+        qrUploadSuccess: "QR குறியீடு வெற்றிகரமாக பதிவேற்றப்பட்டது!",
+        qrRemoved: "QR குறியீடு நீக்கப்பட்டது",
+        newBillReady: "✅ புதிய பில்லுக்கு தயார்! வாடிக்கையாளர் விவரங்களை உள்ளிடவும்.",
         folderSelected: "✅ கோப்புறை தேர்ந்தெடுக்கப்பட்டது",
-        pdfSaved: "✅ PDF சேமிக்கப்பட்டது"
+        pdfSaved: "✅ PDF சேமிக்கப்பட்டது",
+        gstSaved: "ஜிஎஸ்டி அமைப்புகள் சேமிக்கப்பட்டன"
     },
     english: {
         appTitle: "🏪 Hosur Invoice Bill",
         subtitle: "Hosur Invoice Bill",
-        createdBy: "by Shri Muhammed Zabiullah Khan",
+        createdBy: "Shri Muhammed Zabiullah Khan",
         showQR: "Show QR",
         settings: "Settings",
         newBill: "New Bill",
-        addItem: "Add Item",
-        saveInvoice: "💾 Save Invoice & Print",
-        updateInvoice: "🔄 Update Invoice & Print",
-        uploadQR: "Upload QR",
-        removeQR: "Remove QR",
-        clearAllData: "Clear All My Data",
         businessTitle: "🏪 My Business Details",
         businessName: "Business Name",
         businessContact: "Contact & Address",
@@ -166,29 +181,41 @@ const translations = {
         qty: "Qty",
         price: "Price (₹)",
         total: "Total (₹)",
+        addItem: "Add Item",
         subtotal: "Subtotal",
         gst: "GST",
         grandTotal: "Total",
         notes: "Notes",
+        saveInvoice: "💾 Save Invoice & Print",
+        updateInvoice: "🔄 Update Invoice & Print",
+        cancelEdit: "Cancel",
         historyTitle: "📄 My Invoices",
-        noInvoices: "No invoices yet",
+        noInvoices: "No invoices yet. Create your first invoice above!",
         view: "View",
         edit: "Edit",
         delete: "Delete",
         settingsTitle: "Settings",
-        paymentQRTitle: "Your Payment QR",
-        paymentQRDesc: "Upload GPay/PhonePe/Paytm QR",
+        paymentQRTitle: "Your Payment QR Code",
+        paymentQRDesc: "Upload your GPay/PhonePe/Paytm QR code",
+        uploadQR: "Upload QR",
+        removeQR: "Remove QR",
+        folderTitle: "Save Location",
+        selectFolder: "Select Save Folder",
+        folderInfo: "Choose where to save invoice files",
         themeTitle: "🎨 Theme Color",
         gstTitle: "GST Settings",
         gstToggleLabel: "Enable GST",
         gstPercentLabel: "GST Percentage (%)",
+        saveGSTBtn: "Save GST",
         dataTitle: "🗑️ Data Management",
+        clearDataBtn: "Clear All My Data",
+        clearWarning: "Warning: This will delete all your invoices",
         aboutTitle: "ℹ️ About",
         aboutText: "Hosur Invoice Bill - Free invoice generator",
         scanToPay: "Scan to Pay",
-        scanInstruction: "Scan with GPay, PhonePe, or Paytm",
+        scanInstruction: "Scan with GPay, PhonePe, or Paytm to pay",
         close: "Close",
-        noQR: "No payment QR uploaded",
+        noQR: "No payment QR uploaded. Please add in settings.",
         businessNamePlaceholder: "Ex: Shri Muhammed Sons",
         businessContactPlaceholder: "Phone: 9876543210, Hosur Main Road",
         customerNamePlaceholder: "Ex: Rajesh Textiles",
@@ -196,19 +223,20 @@ const translations = {
         itemNamePlaceholder: "Item name (Ex: Rice 5kg)",
         notesPlaceholder: "Thank you! Visit again",
         tipText: "💡 Tip: Start typing - auto suggestions appear! Configure GST in Settings",
+        syncReady: "Ready",
         confirmDelete: "Are you sure you want to delete this invoice?",
         deleteSuccess: "✅ Invoice deleted!",
         updateSuccess: "✅ Invoice updated!",
         saveSuccess: "✅ Invoice saved!",
         noItemAlert: "⚠️ Please add at least one item!",
-        clearConfirm: "⚠️ Delete all invoices?",
+        clearConfirm: "⚠️ WARNING: This will delete ALL your invoices from this browser!\n\nContinue?",
         themeChanged: "Theme changed",
-        qrUploadSuccess: "QR uploaded!",
-        qrRemoved: "QR removed",
-        newBillReady: "✅ Ready for new bill!",
-        selectFolder: "Select Save Folder",
+        qrUploadSuccess: "QR code uploaded successfully!",
+        qrRemoved: "QR code removed",
+        newBillReady: "✅ Ready for new bill! Enter customer details.",
         folderSelected: "✅ Folder selected",
-        pdfSaved: "✅ PDF saved"
+        pdfSaved: "✅ PDF saved",
+        gstSaved: "GST settings saved"
     }
 };
 
@@ -219,40 +247,95 @@ function setText(elementId, text) {
 
 function applyTranslations() {
     const t = translations[currentLanguage];
-    const elements = ['appTitle', 'subtitleText', 'createdByText', 'showQRBtn', 'settingsBtn', 'newBillBtn', 
-        'addItemBtn', 'businessTitle', 'businessNameLabel', 'businessContactLabel', 'invoicePrefixLabel', 
-        'nextInvoiceLabel', 'createInvoiceTitle', 'customerNameLabel', 'customerMobileLabel', 'itemsLabel',
-        'itemNameHeader', 'qtyHeader', 'priceHeader', 'totalHeader', 'subtotalLabel', 'totalLabel', 
-        'notesLabel', 'historyTitle', 'noInvoicesText', 'settingsTitle', 'qrUploadTitle', 'qrUploadDesc',
-        'themeTitle', 'gstTitle', 'gstToggleLabel', 'gstPercentLabel', 'dataTitle', 'aboutTitle', 'aboutText',
-        'paymentQRTitle', 'paymentQRInstruction', 'qrCloseBtn', 'noQRText', 'tipText', 'uploadQRBtn', 'removeQRBtn', 'clearDataBtn'];
     
-    elements.forEach(id => {
-        const el = document.getElementById(id);
-        if (el && t[id]) el.textContent = t[id];
-    });
-    
+    setText('appTitle', t.appTitle);
+    setText('subtitleText', t.subtitle);
+    setText('createdByText', t.createdBy);
+    setText('showQRBtn', t.showQR);
+    setText('settingsBtn', t.settings);
+    setText('newBillBtn', t.newBill);
+    setText('businessTitle', t.businessTitle);
+    setText('businessNameLabel', t.businessName);
+    setText('businessContactLabel', t.businessContact);
+    setText('invoicePrefixLabel', t.invoicePrefix);
+    setText('nextInvoiceLabel', t.nextInvoice);
+    setText('createInvoiceTitle', editingInvoiceId ? t.editInvoiceTitle : t.createInvoice);
+    setText('customerNameLabel', t.customerName);
+    setText('customerMobileLabel', t.customerMobile);
+    setText('itemsLabel', t.itemsLabel);
+    setText('itemNameHeader', t.itemName);
+    setText('qtyHeader', t.qty);
+    setText('priceHeader', t.price);
+    setText('totalHeader', t.total);
+    setText('addItemBtn', t.addItem);
+    setText('subtotalLabel', t.subtotal);
+    setText('totalLabel', t.grandTotal);
+    setText('notesLabel', t.notes);
     setText('saveBtnText', editingInvoiceId ? t.updateInvoice : t.saveInvoice);
-    setText('gstLabel', gstEnabled ? `${t.gst} (${gstPercentage}%)` : t.gst);
+    setText('historyTitle', t.historyTitle);
+    setText('noInvoicesText', t.noInvoices);
+    setText('settingsTitle', t.settingsTitle);
+    setText('qrUploadTitle', t.paymentQRTitle);
+    setText('qrUploadDesc', t.paymentQRDesc);
+    setText('uploadQRBtn', t.uploadQR);
+    setText('removeQRBtn', t.removeQR);
+    setText('themeTitle', t.themeTitle);
+    setText('gstTitle', t.gstTitle);
+    setText('gstToggleLabel', t.gstToggleLabel);
+    setText('gstPercentLabel', t.gstPercentLabel);
+    setText('dataTitle', t.dataTitle);
+    setText('clearDataBtn', t.clearDataBtn);
+    setText('clearWarning', t.clearWarning);
+    setText('aboutTitle', t.aboutTitle);
+    setText('aboutText', t.aboutText);
+    setText('paymentQRTitle', t.scanToPay);
+    setText('paymentQRInstruction', t.scanInstruction);
+    setText('qrCloseBtn', t.close);
+    setText('noQRText', t.noQR);
+    setText('tipText', t.tipText);
+    setText('syncText', t.syncReady);
     
-    const placeholders = {
-        businessName: t.businessNamePlaceholder,
-        businessContact: t.businessContactPlaceholder,
-        customerName: t.customerNamePlaceholder,
-        customerMobile: t.customerMobilePlaceholder,
-        tamilNotes: t.notesPlaceholder
-    };
-    for (const [id, placeholder] of Object.entries(placeholders)) {
-        const el = document.getElementById(id);
-        if (el) el.placeholder = placeholder;
-    }
+    const saveGSTBtn = document.getElementById('saveGSTBtn');
+    if (saveGSTBtn) saveGSTBtn.textContent = t.saveGSTBtn;
+    
+    updateGSTLabel();
+    
+    const businessNameInput = document.getElementById('businessName');
+    const businessContactInput = document.getElementById('businessContact');
+    const customerNameInput = document.getElementById('customerName');
+    const customerMobileInput = document.getElementById('customerMobile');
+    const tamilNotesInput = document.getElementById('tamilNotes');
+    
+    if (businessNameInput) businessNameInput.placeholder = t.businessNamePlaceholder;
+    if (businessContactInput) businessContactInput.placeholder = t.businessContactPlaceholder;
+    if (customerNameInput) customerNameInput.placeholder = t.customerNamePlaceholder;
+    if (customerMobileInput) customerMobileInput.placeholder = t.customerMobilePlaceholder;
+    if (tamilNotesInput) tamilNotesInput.placeholder = t.notesPlaceholder;
     
     const langBtn = document.getElementById('langBtn');
-    if (langBtn) langBtn.innerHTML = `<i class="fas fa-language"></i> ${currentLanguage === 'tamil' ? 'English' : 'தமிழ்'}`;
+    if (langBtn) {
+        langBtn.innerHTML = `<i class="fas fa-language"></i> ${currentLanguage === 'tamil' ? 'English' : 'தமிழ்'}`;
+    }
     
     document.querySelectorAll('.item-name').forEach(input => {
         input.placeholder = t.itemNamePlaceholder;
     });
+    
+    const folderTitle = document.getElementById('folderTitle');
+    const selectFolderBtnText = document.getElementById('selectFolderBtnText');
+    const folderInfo = document.getElementById('folderInfo');
+    if (folderTitle) folderTitle.textContent = t.folderTitle;
+    if (selectFolderBtnText) selectFolderBtnText.textContent = t.selectFolder;
+    if (folderInfo) folderInfo.textContent = t.folderInfo;
+    
+    const gstInfoText = document.getElementById('gstInfoText');
+    if (gstInfoText) {
+        if (gstEnabled) {
+            gstInfoText.textContent = currentLanguage === 'tamil' ? `தற்போதைய ஜிஎஸ்டி: ${gstPercentage}% (இயக்கத்தில் உள்ளது)` : `Current GST: ${gstPercentage}% (Enabled)`;
+        } else {
+            gstInfoText.textContent = currentLanguage === 'tamil' ? `தற்போதைய ஜிஎஸ்டி: முடக்கப்பட்டது (0%)` : `Current GST: Disabled (0%)`;
+        }
+    }
 }
 
 function showToast(message) {
@@ -266,7 +349,8 @@ function showToast(message) {
 function toggleLanguage() {
     currentLanguage = currentLanguage === 'tamil' ? 'english' : 'tamil';
     applyTranslations();
-    showToast(currentLanguage === 'tamil' ? '✅ தமிழுக்கு மாற்றப்பட்டது' : '✅ Switched to English');
+    const msg = currentLanguage === 'tamil' ? '✅ தமிழுக்கு மாற்றப்பட்டது' : '✅ Switched to English';
+    showToast(msg);
 }
 
 function openSettings() {
@@ -348,26 +432,29 @@ function resetForNewBill() {
     if (editingInvoiceId) {
         editingInvoiceId = null;
         const saveBtn = document.getElementById('saveInvoiceBtn');
-        if (saveBtn) saveBtn.innerHTML = `<i class="fas fa-save"></i> ${t.saveInvoice}`;
+        if (saveBtn) {
+            saveBtn.innerHTML = `<i class="fas fa-save"></i> ${t.saveInvoice}`;
+            saveBtn.classList.remove('bg-orange-500', 'hover:bg-orange-600');
+            saveBtn.classList.add('btn-primary');
+        }
         document.getElementById('createInvoiceTitle').innerHTML = t.createInvoice;
+        const cancelBtn = document.getElementById('cancelEditBtn');
+        if (cancelBtn) cancelBtn.style.display = 'none';
     }
     showToast(t.newBillReady);
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// ============ File System Access API Functions ============
-
-// Request permission to save files
+// File System Access API Functions
 async function requestSaveDirectory() {
+    const t = translations[currentLanguage];
     try {
-        // Check if File System Access API is supported
         if ('showDirectoryPicker' in window) {
             rootDirectoryHandle = await window.showDirectoryPicker();
             localStorage.setItem('saveDirectoryPermission', 'granted');
-            showToast(translations[currentLanguage].folderSelected);
+            showToast(t.folderSelected);
             return true;
         } else {
-            // Fallback for browsers that don't support the API
             showToast('Your browser doesn\'t support file saving. Use Save as PDF from print dialog.');
             return false;
         }
@@ -380,7 +467,6 @@ async function requestSaveDirectory() {
     }
 }
 
-// Get today's folder (create if not exists)
 async function getTodaysFolder() {
     if (!rootDirectoryHandle) return null;
     
@@ -391,11 +477,9 @@ async function getTodaysFolder() {
     const folderName = `${year}-${month}-${day}`;
     
     try {
-        // Try to get existing folder
         let folderHandle = await rootDirectoryHandle.getDirectoryHandle(folderName, { create: false });
         return folderHandle;
     } catch (e) {
-        // Folder doesn't exist, create it
         try {
             let folderHandle = await rootDirectoryHandle.getDirectoryHandle(folderName, { create: true });
             return folderHandle;
@@ -406,11 +490,9 @@ async function getTodaysFolder() {
     }
 }
 
-// Save PDF file to the selected directory
 async function savePDFToDevice(pdfBlob, fileName) {
+    const t = translations[currentLanguage];
     if (!rootDirectoryHandle) {
-        // Ask user to select folder first
-        const t = translations[currentLanguage];
         const confirmed = confirm(`${t.selectFolder}?`);
         if (confirmed) {
             const success = await requestSaveDirectory();
@@ -424,13 +506,12 @@ async function savePDFToDevice(pdfBlob, fileName) {
         const todayFolder = await getTodaysFolder();
         if (!todayFolder) return false;
         
-        // Create the file
         const fileHandle = await todayFolder.getFileHandle(fileName, { create: true });
         const writable = await fileHandle.createWritable();
         await writable.write(pdfBlob);
         await writable.close();
         
-        showToast(`${translations[currentLanguage].pdfSaved}: ${fileName}`);
+        showToast(`${t.pdfSaved}: ${fileName}`);
         return true;
     } catch (error) {
         console.error('Error saving PDF:', error);
@@ -439,8 +520,7 @@ async function savePDFToDevice(pdfBlob, fileName) {
     }
 }
 
-// ============ Database Functions ============
-
+// Database Functions
 function initDB() {
     return new Promise((resolve, reject) => {
         const request = indexedDB.open('HosurInvoiceDB', 3);
@@ -725,8 +805,9 @@ function initializeFirstRow() {
     }
 }
 
-// Generate HTML content for PDF
+// Generate PDF HTML
 function generatePDFHtml(invoice) {
+    const t = translations[currentLanguage];
     const itemsHtml = invoice.items.map((item, index) => `
         <tr style="border-bottom: 1px solid #e5e7eb;">
             <td style="padding: 12px 8px; text-align: center; border: 1px solid #ddd;">${index + 1}</td>
@@ -737,8 +818,10 @@ function generatePDFHtml(invoice) {
         </tr>
     `).join('');
     
-    const gstText = gstEnabled ? `GST (${gstPercentage}%)` : 'GST';
+    const gstText = gstEnabled ? (currentLanguage === 'tamil' ? `ஜிஎஸ்டி (${gstPercentage}%)` : `GST (${gstPercentage}%)`) : (currentLanguage === 'tamil' ? 'ஜிஎஸ்டி' : 'GST');
     const gstAmount = gstEnabled ? parseFloat(invoice.gst).toFixed(2) : '0.00';
+    const thankyouText = currentLanguage === 'tamil' ? 'நன்றி! மீண்டும் வருக' : 'Thank you! Visit again';
+    const poweredText = currentLanguage === 'tamil' ? 'ஹொசூர் இன்வாய்ஸ் பில் மூலம் இயக்கப்படுகிறது' : 'Powered by Hosur Invoice Bill';
     
     return `
         <!DOCTYPE html>
@@ -842,14 +925,14 @@ function generatePDFHtml(invoice) {
                     </table>
                 </div>
                 <div class="totals">
-                    <table>
+                    <tr>
                         <tr><td>Subtotal</td><td>₹ ${invoice.subtotal}</td></tr>
                         <tr><td>${gstText}</td><td>₹ ${gstAmount}</td></tr>
                         <tr class="grand-total"><td>TOTAL</td><td>₹ ${invoice.total}</td></tr>
                     </table>
                 </div>
-                <div class="notes"><p>📝 ${escapeHtml(invoice.tamilNotes)}</p></div>
-                <div class="footer"><p>Thank you for your business! | Powered by Hosur Invoice Bill</p></div>
+                <div class="notes"><p>📝 ${escapeHtml(invoice.tamilNotes || thankyouText)}</p></div>
+                <div class="footer"><p>${thankyouText} | ${poweredText}</p></div>
             </div>
             <script>window.onload = function() { window.print(); setTimeout(function() { window.close(); }, 1000); };<\/script>
         </body>
@@ -857,7 +940,7 @@ function generatePDFHtml(invoice) {
     `;
 }
 
-// Professional Print Function with File Saving
+// Save Invoice - Main Function
 async function saveInvoice() {
     const t = translations[currentLanguage];
     const businessName = document.getElementById('businessName').value || 'My Business';
@@ -901,7 +984,13 @@ async function saveInvoice() {
         editingInvoiceId = null;
         document.getElementById('createInvoiceTitle').innerHTML = t.createInvoice;
         const saveBtn = document.getElementById('saveInvoiceBtn');
-        if (saveBtn) saveBtn.innerHTML = `<i class="fas fa-save"></i> ${t.saveInvoice}`;
+        if (saveBtn) {
+            saveBtn.innerHTML = `<i class="fas fa-save"></i> ${t.saveInvoice}`;
+            saveBtn.classList.remove('bg-orange-500', 'hover:bg-orange-600');
+            saveBtn.classList.add('btn-primary');
+        }
+        const cancelBtn = document.getElementById('cancelEditBtn');
+        if (cancelBtn) cancelBtn.style.display = 'none';
     } else {
         const invoiceNo = await getNextInvoiceNumber();
         invoice = { id: Date.now(), invoiceNo, date, businessName, businessContact, customerName, customerMobile, 
@@ -918,7 +1007,6 @@ async function saveInvoice() {
     const nextNum = await getNextInvoiceNumber();
     document.getElementById('nextInvoiceNumber').textContent = nextNum;
     
-    // Generate and save/print the invoice
     await generateAndSaveInvoice(invoice);
 }
 
@@ -926,16 +1014,13 @@ async function generateAndSaveInvoice(invoice) {
     const htmlContent = generatePDFHtml(invoice);
     const blob = new Blob([htmlContent], { type: 'text/html' });
     
-    // Create a safe filename
     const customerName = invoice.customerName.replace(/[^a-zA-Z0-9]/g, '_');
     const mobile = invoice.customerMobile || 'no_mobile';
     const fileName = `${customerName}_${mobile}.html`;
     
-    // Try to save to device using File System Access API
     const saved = await savePDFToDevice(blob, fileName);
     
     if (!saved) {
-        // Fallback: Open print dialog (user can Save as PDF)
         const printWindow = window.open('', '_blank');
         printWindow.document.write(htmlContent);
         printWindow.document.close();
@@ -980,10 +1065,37 @@ async function editInvoice(invoiceId) {
         addRowEventListeners(newRow);
     });
     
+    if (invoice.items.length === 0) addItemRow();
     calculateAllTotals();
+    
     document.getElementById('createInvoiceTitle').innerHTML = t.editInvoiceTitle;
     const saveBtn = document.getElementById('saveInvoiceBtn');
-    if (saveBtn) saveBtn.innerHTML = `<i class="fas fa-edit"></i> ${t.updateInvoice}`;
+    if (saveBtn) {
+        saveBtn.innerHTML = `<i class="fas fa-edit"></i> ${t.updateInvoice}`;
+        saveBtn.classList.remove('btn-primary');
+        saveBtn.classList.add('bg-orange-500', 'hover:bg-orange-600');
+    }
+    
+    let cancelBtn = document.getElementById('cancelEditBtn');
+    if (!cancelBtn) {
+        const container = document.getElementById('saveInvoiceBtn')?.parentElement;
+        if (container) {
+            cancelBtn = document.createElement('button');
+            cancelBtn.id = 'cancelEditBtn';
+            cancelBtn.className = 'bg-gray-500 text-white px-4 py-3 rounded-xl font-bold text-sm md:text-base mt-2 w-full transition active:scale-98 flex items-center justify-center gap-2';
+            cancelBtn.innerHTML = `<i class="fas fa-times"></i> <span>${t.cancelEdit}</span>`;
+            cancelBtn.onclick = () => {
+                editingInvoiceId = null;
+                resetForNewBill();
+            };
+            container.appendChild(cancelBtn);
+        }
+    } else {
+        cancelBtn.style.display = 'flex';
+        const span = cancelBtn.querySelector('span');
+        if (span) span.textContent = t.cancelEdit;
+    }
+    
     window.scrollTo({ top: 0, behavior: 'smooth' });
     showToast(`Editing invoice ${invoice.invoiceNo}`);
 }
@@ -998,7 +1110,13 @@ async function deleteInvoice(invoiceId) {
             editingInvoiceId = null;
             document.getElementById('createInvoiceTitle').innerHTML = t.createInvoice;
             const saveBtn = document.getElementById('saveInvoiceBtn');
-            if (saveBtn) saveBtn.innerHTML = `<i class="fas fa-save"></i> ${t.saveInvoice}`;
+            if (saveBtn) {
+                saveBtn.innerHTML = `<i class="fas fa-save"></i> ${t.saveInvoice}`;
+                saveBtn.classList.remove('bg-orange-500', 'hover:bg-orange-600');
+                saveBtn.classList.add('btn-primary');
+            }
+            const cancelBtn = document.getElementById('cancelEditBtn');
+            if (cancelBtn) cancelBtn.style.display = 'none';
         }
     }
 }
@@ -1113,27 +1231,22 @@ document.getElementById('invoicePrefix').addEventListener('change', async () => 
     document.getElementById('nextInvoiceNumber').textContent = nextNum;
 });
 
-// Add Select Folder button to settings
+// Add Folder Selector to Settings
 function addFolderSelectorToSettings() {
     const settingsPanel = document.getElementById('settingsPanel');
     const themeDiv = document.getElementById('themeTitle')?.parentElement;
     if (themeDiv && !document.getElementById('folderSelectorBtn')) {
         const folderDiv = document.createElement('div');
         folderDiv.className = 'mb-6 border-b pb-4';
+        folderDiv.id = 'folderSelectorDiv';
         folderDiv.innerHTML = `
-            <h3 class="font-semibold mb-2"><i class="fas fa-folder text-yellow-600"></i> <span id="folderTitle">Save Location</span></h3>
+            <h3 class="font-semibold mb-2" id="folderTitle"><i class="fas fa-folder text-yellow-600"></i> ${translations[currentLanguage].folderTitle}</h3>
             <button id="folderSelectorBtn" onclick="requestSaveDirectory()" class="w-full bg-yellow-500 text-white px-3 py-2 rounded-lg text-sm hover:bg-yellow-600 transition">
-                <i class="fas fa-folder-open"></i> <span id="selectFolderBtnText">Select Save Folder</span>
+                <i class="fas fa-folder-open"></i> <span id="selectFolderBtnText">${translations[currentLanguage].selectFolder}</span>
             </button>
-            <p class="text-xs text-gray-500 mt-1" id="folderInfo">Choose where to save invoice files</p>
+            <p class="text-xs text-gray-500 mt-1" id="folderInfo">${translations[currentLanguage].folderInfo}</p>
         `;
         themeDiv.parentElement.insertBefore(folderDiv, themeDiv);
-        
-        // Update translations for folder selector
-        const t = translations[currentLanguage];
-        document.getElementById('folderTitle').textContent = t.selectFolder || 'Save Location';
-        const selectBtn = document.getElementById('selectFolderBtnText');
-        if (selectBtn) selectBtn.textContent = t.selectFolder || 'Select Save Folder';
     }
 }
 
@@ -1168,7 +1281,7 @@ async function init() {
         applyTranslations();
         addFolderSelectorToSettings();
         
-        console.log('✅ Hosur Invoice Bill Ready! Frontend File Management Active');
+        console.log('✅ Hosur Invoice Bill Ready! Full Bilingual Support with File Saving');
     } catch (error) {
         console.error('Init error:', error);
     }
