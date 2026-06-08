@@ -66,47 +66,65 @@ function playSound(type) {
 // DATE FORMAT CONVERSION FUNCTIONS             //
 // ============================================ //
 
-// Normalize date to standard format DD/MM/YYYY with leading zeros
+// Convert any date format to standard DD/MM/YYYY with leading zeros
 function normalizeDate(dateStr) {
     if (!dateStr) return '';
     
-    // If already in DD/MM/YYYY format with possible single digits
+    // If already in DD/MM/YYYY format
     if (dateStr.includes('/')) {
         const parts = dateStr.split('/');
         if (parts.length === 3) {
-            const day = parts[0].padStart(2, '0');
-            const month = parts[1].padStart(2, '0');
+            const day = parts[0].toString().padStart(2, '0');
+            const month = parts[1].toString().padStart(2, '0');
             const year = parts[2];
             return `${day}/${month}/${year}`;
         }
     }
+    
+    // If in YYYY-MM-DD format
+    if (dateStr.includes('-')) {
+        const parts = dateStr.split('-');
+        if (parts.length === 3) {
+            const day = parts[2].toString().padStart(2, '0');
+            const month = parts[1].toString().padStart(2, '0');
+            const year = parts[0];
+            return `${day}/${month}/${year}`;
+        }
+    }
+    
     return dateStr;
 }
 
-// Convert YYYY-MM-DD to DD/MM/YYYY for comparison
-function convertToDisplayDate(dateStr) {
+// Convert YYYY-MM-DD to DD/MM/YYYY for filter
+function convertFilterDateToDMY(dateStr) {
     if (!dateStr) return '';
-    if (dateStr.includes('/')) return normalizeDate(dateStr);
     const parts = dateStr.split('-');
     if (parts.length === 3) {
-        const day = parts[2].padStart(2, '0');
-        const month = parts[1].padStart(2, '0');
+        const day = parseInt(parts[2]).toString();
+        const month = parseInt(parts[1]).toString();
         const year = parts[0];
-        return `${day}/${month}/${year}`;
+        // Return both normalized and raw formats for comparison
+        return {
+            normalized: `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year}`,
+            raw: `${day}/${month}/${year}`
+        };
     }
-    return dateStr;
+    return { normalized: dateStr, raw: dateStr };
 }
 
-// Get today's date in YYYY-MM-DD format for filter input
-function getTodayDateForFilter() {
-    const today = new Date();
-    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-}
-
-// Format date for display (DD/MM/YYYY)
-function formatDisplayDate(date) {
-    if (!date) return '';
-    return normalizeDate(date);
+// Check if two dates match (handles single/double digit differences)
+function datesMatch(invoiceDate, filterDate) {
+    if (!invoiceDate || !filterDate) return false;
+    
+    // Normalize both dates
+    const normalizedInvoice = normalizeDate(invoiceDate);
+    const normalizedFilter = normalizeDate(filterDate);
+    
+    // Also try raw comparison without leading zeros
+    const invoiceRaw = invoiceDate.replace(/\b0/g, ''); // Remove leading zeros
+    const filterRaw = filterDate.replace(/\b0/g, '');
+    
+    return normalizedInvoice === normalizedFilter || invoiceRaw === filterRaw;
 }
 
 // ============================================ //
@@ -929,7 +947,7 @@ function generateFileName(customerName, date) {
     let formattedDate = date;
     if (date && date.includes('/')) {
         const parts = date.split('/');
-        formattedDate = `${parts[0]}-${parts[1]}-${parts[2]}`;
+        formattedDate = `${parts[0].padStart(2, '0')}-${parts[1].padStart(2, '0')}-${parts[2]}`;
     } else {
         const today = new Date();
         formattedDate = `${today.getDate()}-${today.getMonth() + 1}-${today.getFullYear()}`;
@@ -1014,10 +1032,12 @@ function generatePreviewHTML(invoice) {
             <div class="filename-info">📄 ${currentLanguage === 'tamil' ? 'PDF கோப்பு பெயர்:' : 'PDF File Name:'} <strong>${fileName}</strong></div>
             <div class="customer-info"><div><strong>BILL TO:</strong><p>${escapeHtml(invoice.customerName)}</p>${invoice.customerMobile ? `<p>📞 ${escapeHtml(invoice.customerMobile)}</p>` : ''}</div>
             <div><strong>INVOICE DETAILS:</strong><p>Invoice No: ${invoice.invoiceNo}</p><p>Date: ${invoice.date}</p></div></div>
-            <div class="items-table"></td><thead><tr><th>#</th><th>ITEM DESCRIPTION</th><th>QTY</th><th>PRICE</th><th>TOTAL</th></tr></thead><tbody>${itemsHtml}</tbody></table></div>
-            <div class="totals"><table><td>Subtotal</td>lakang₹ ${invoice.subtotal}</td></tr>
-            <tr><td>${gstText}</td><td>₹ ${gstAmount}</td></tr>
-            <tr class="grand-total"><td>TOTAL</td><td>₹ ${invoice.total}</td></tr></table></div>
+            <div class="items-table"><table><thead><tr><th>#</th><th>ITEM DESCRIPTION</th><th>QTY</th><th>PRICE</th><th>TOTAL</th></tr></thead><tbody>${itemsHtml}</tbody></table></div>
+            <div class="totals"><tr><td>Subtotal</td>lakang₹ ${invoice.subtotal}</td></tr>
+            <tr><td>${gstText}</td>lakang₹ ${gstAmount}</td></tr>
+            <tr class="grand-total"><td>TOTAL</td>lakang₹ ${invoice.total}Neu</tr>
+            </table>
+            </div>
             <div class="notes"><p>📝 ${escapeHtml(invoice.tamilNotes || thankyouText)}</p></div>
             <div class="footer"><p>${thankyouText} | ${poweredText}</p></div>
             <div class="button-container"><button class="print-btn" onclick="window.print()">🖨️ ${t.printPDF}</button><button class="close-btn" onclick="window.close()">❌ ${t.closePreview}</button></div>
@@ -1227,7 +1247,7 @@ async function viewInvoicePreview(invoiceId) {
 }
 
 // ============================================ //
-// DATE FILTER FUNCTIONS - FIXED!               //
+// DATE FILTER FUNCTIONS - FINAL FIX!           //
 // ============================================ //
 async function applyDateFilter() {
     const dateInput = document.getElementById('filterDate');
@@ -1238,20 +1258,24 @@ async function applyDateFilter() {
         return;
     }
     
-    // Convert selected date to DD/MM/YYYY format with proper normalization
+    // Convert the filter date to match invoice date format
     const parts = selectedDate.split('-');
-    const normalizedFilterDate = `${parseInt(parts[2])}/${parseInt(parts[1])}/${parts[0]}`;
+    const year = parts[0];
+    const month = parseInt(parts[1]);
+    const day = parseInt(parts[2]);
     
-    currentFilterDate = normalizedFilterDate;
+    // Create both formats for comparison (with and without leading zeros)
+    const filterDates = [
+        `${day}/${month}/${year}`,           // 9/6/2026
+        `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year}`  // 09/06/2026
+    ];
+    
+    currentFilterDate = filterDates;
     await loadInvoices();
     
+    const displayDate = `${day}/${month}/${year}`;
     const t = translations[currentLanguage];
-    const displayDate = normalizeDate(normalizedFilterDate);
-    if (typeof t.filterApplied === 'function') {
-        showToast(t.filterApplied(displayDate));
-    } else {
-        showToast(`📅 Showing invoices for ${displayDate}`);
-    }
+    showToast(`📅 ${typeof t.filterApplied === 'function' ? t.filterApplied(displayDate) : `Showing invoices for ${displayDate}`}`);
 }
 
 async function clearDateFilter() {
@@ -1261,11 +1285,7 @@ async function clearDateFilter() {
     await loadInvoices();
     
     const t = translations[currentLanguage];
-    if (typeof t.filterCleared === 'string') {
-        showToast(t.filterCleared);
-    } else {
-        showToast('📅 Showing all invoices');
-    }
+    showToast(typeof t.filterCleared === 'string' ? t.filterCleared : '📅 Showing all invoices');
 }
 
 async function loadInvoices() {
@@ -1275,26 +1295,37 @@ async function loadInvoices() {
         const countSpan = document.getElementById('invoiceCount');
         const t = translations[currentLanguage];
         
-        // Apply date filter with normalized date comparison
+        // Apply date filter
         let filteredInvoices = [...invoices];
         if (currentFilterDate) {
+            // currentFilterDate is now an array of possible date formats
+            const filterDateArray = Array.isArray(currentFilterDate) ? currentFilterDate : [currentFilterDate];
+            
             filteredInvoices = filteredInvoices.filter(inv => {
-                const normalizedInvoiceDate = normalizeDate(inv.date);
-                return normalizedInvoiceDate === currentFilterDate;
+                const invoiceDate = inv.date;
+                return filterDateArray.some(filterDate => {
+                    // Direct comparison
+                    if (invoiceDate === filterDate) return true;
+                    // Also try normalizing both
+                    const normalizedInvoice = normalizeDate(invoiceDate);
+                    const normalizedFilter = normalizeDate(filterDate);
+                    return normalizedInvoice === normalizedFilter;
+                });
             });
         }
         
-        // Sort by ID descending (newest first)
+        // Sort by ID descending
         filteredInvoices.sort((a, b) => b.id - a.id);
         
         if (countSpan) countSpan.textContent = `(${filteredInvoices.length})`;
         
         if (filteredInvoices.length === 0) {
             if (currentFilterDate) {
-                const formattedDate = normalizeDate(currentFilterDate);
+                let displayDate = Array.isArray(currentFilterDate) ? currentFilterDate[0] : currentFilterDate;
+                displayDate = normalizeDate(displayDate);
                 container.innerHTML = `<div class="text-center text-gray-500 py-8">
                     <i class="fas fa-calendar-times text-4xl mb-2 opacity-50"></i>
-                    <p class="text-sm">${currentLanguage === 'tamil' ? `📅 ${formattedDate} தேதியில் இன்வாய்ஸ் இல்லை` : `📅 No invoices found for ${formattedDate}`}</p>
+                    <p class="text-sm">${currentLanguage === 'tamil' ? `📅 ${displayDate} தேதியில் இன்வாய்ஸ் இல்லை` : `📅 No invoices found for ${displayDate}`}</p>
                     <p class="text-xs text-gray-400 mt-2">${currentLanguage === 'tamil' ? 'வேறு தேதியை முயற்சிக்கவும் அல்லது வடிகட்டியை அழிக்கவும்' : 'Try another date or clear filter'}</p>
                 </div>`;
             } else {
