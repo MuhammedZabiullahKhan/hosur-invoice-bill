@@ -1,7 +1,5 @@
 // Hosur Invoice Bill - Complete Application
-// Created by Shri Muhammed Zabiullah Khan
-// Preview First, Then Print - Print button hides during print
-// Auto PDF filename: CustomerName_Date.pdf
+// Created by Shri Muhammed Zabiullah Khan | PrimeSys Solutions
 
 let db;
 let currentLanguage = 'tamil';
@@ -80,12 +78,12 @@ function saveGSTSettings() {
     showToast(msg);
 }
 
-// Complete Translations
+// Complete Translations with View, Edit, Delete in Tamil
 const translations = {
     tamil: {
         appTitle: "🏪 ஹொசூர் இன்வாய்ஸ் பில்",
         subtitle: "ஹொசூர் இன்வாய்ஸ் பில்",
-        createdBy: "ஷ்ரீ முஹம்மது ஜபியுல்லா கான்",
+        createdBy: "ஷ்ரீ முஹம்மது ஜபியுல்லா கான் | PrimeSys Solutions",
         showQR: "QR காட்டு",
         settings: "அமைப்புகள்",
         newBill: "புதிய பில்",
@@ -155,12 +153,13 @@ const translations = {
         newBillReady: "✅ புதிய பில்லுக்கு தயார்!",
         printPDF: "🖨️ PDF ஆக அச்சிடுக",
         closePreview: "❌ மூடு",
-        previewTitle: "இன்வாய்ஸ் முன்னோட்டம்"
+        previewTitle: "இன்வாய்ஸ் முன்னோட்டம்",
+        installBtnText: "ஆப் நிறுவுக"
     },
     english: {
         appTitle: "🏪 Hosur Invoice Bill",
         subtitle: "Hosur Invoice Bill",
-        createdBy: "Shri Muhammed Zabiullah Khan",
+        createdBy: "Shri Muhammed Zabiullah Khan | PrimeSys Solutions",
         showQR: "Show QR",
         settings: "Settings",
         newBill: "New Bill",
@@ -230,7 +229,8 @@ const translations = {
         newBillReady: "✅ Ready for new bill!",
         printPDF: "🖨️ Print as PDF",
         closePreview: "❌ Close",
-        previewTitle: "Invoice Preview"
+        previewTitle: "Invoice Preview",
+        installBtnText: "Install App"
     }
 };
 
@@ -288,6 +288,7 @@ function applyTranslations() {
     setText('noQRText', t.noQR);
     setText('tipText', t.tipText);
     setText('syncText', t.syncReady);
+    setText('installBtnText', t.installBtnText);
     
     const saveGSTBtn = document.getElementById('saveGSTBtn');
     if (saveGSTBtn) saveGSTBtn.textContent = t.saveGSTBtn;
@@ -515,7 +516,7 @@ function createAutoComplete(inputElement, suggestions, onSelect) {
     
     const dropdown = document.createElement('div');
     dropdown.id = `dropdown_${inputElement.id}`;
-    dropdown.className = 'fixed z-50 bg-white border rounded-lg shadow-lg max-h-48 overflow-y-auto';
+    dropdown.className = 'auto-suggest';
     const rect = inputElement.getBoundingClientRect();
     dropdown.style.top = `${rect.bottom + window.scrollY}px`;
     dropdown.style.left = `${rect.left + window.scrollX}px`;
@@ -523,7 +524,7 @@ function createAutoComplete(inputElement, suggestions, onSelect) {
     
     suggestions.forEach(suggestion => {
         const item = document.createElement('div');
-        item.className = 'px-3 py-2 hover:bg-blue-100 cursor-pointer text-sm';
+        item.className = 'auto-suggest-item';
         item.textContent = suggestion;
         item.onclick = () => {
             inputElement.value = suggestion;
@@ -719,12 +720,10 @@ function initializeFirstRow() {
 
 // Generate sanitized filename from customer name and date
 function generateFileName(customerName, date) {
-    // Remove special characters from customer name
     let cleanName = customerName.replace(/[^a-zA-Z0-9\u0B80-\u0BFF]/g, '_');
     cleanName = cleanName.replace(/_+/g, '_');
     cleanName = cleanName.substring(0, 50);
     
-    // Format date as DD-MM-YYYY
     let formattedDate = date;
     if (date && date.includes('/')) {
         const parts = date.split('/');
@@ -737,11 +736,9 @@ function generateFileName(customerName, date) {
     return `${cleanName}_${formattedDate}.pdf`;
 }
 
-// Generate Preview HTML (with Print button that hides during print)
+// Generate Preview HTML
 function generatePreviewHTML(invoice, isEdit = false) {
     const t = translations[currentLanguage];
-    
-    // Generate filename for display
     const fileName = generateFileName(invoice.customerName, invoice.date);
     
     const itemsHtml = invoice.items.map((item, index) => `
@@ -767,83 +764,27 @@ function generatePreviewHTML(invoice, isEdit = false) {
             <title>Invoice ${invoice.invoiceNo}</title>
             <style>
                 * { margin: 0; padding: 0; box-sizing: border-box; }
-                body {
-                    font-family: 'Inter', 'Noto Sans Tamil', Arial, sans-serif;
-                    background: #f0f2f5;
-                    padding: 20px;
-                    display: flex;
-                    justify-content: center;
-                    min-height: 100vh;
-                }
-                .invoice-container {
-                    max-width: 900px;
-                    width: 100%;
-                    background: white;
-                    border-radius: 16px;
-                    box-shadow: 0 20px 35px -10px rgba(0,0,0,0.15);
-                    overflow: hidden;
-                }
-                .invoice-header {
-                    background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
-                    color: white;
-                    padding: 25px 30px;
-                    text-align: center;
-                }
+                body { font-family: 'Inter', 'Noto Sans Tamil', Arial, sans-serif; background: #f0f2f5; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+                .invoice-container { max-width: 900px; width: 100%; background: white; border-radius: 16px; box-shadow: 0 20px 35px -10px rgba(0,0,0,0.15); overflow: hidden; }
+                .invoice-header { background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); color: white; padding: 25px 30px; text-align: center; }
                 .invoice-header h1 { font-size: 24px; margin-bottom: 5px; }
                 .invoice-header p { font-size: 12px; opacity: 0.9; }
-                .invoice-title {
-                    background: #f8fafc;
-                    padding: 12px 30px;
-                    border-bottom: 2px solid #e2e8f0;
-                }
+                .invoice-title { background: #f8fafc; padding: 12px 30px; border-bottom: 2px solid #e2e8f0; }
                 .invoice-title h2 { color: #1e3a8a; font-size: 18px; }
-                .customer-info {
-                    padding: 15px 30px;
-                    background: #f8fafc;
-                    display: flex;
-                    justify-content: space-between;
-                    flex-wrap: wrap;
-                    gap: 15px;
-                    border-bottom: 1px solid #e2e8f0;
-                }
+                .filename-info { background: #e8f0fe; padding: 10px 30px; font-size: 11px; color: #1e3a8a; border-bottom: 1px solid #e2e8f0; text-align: center; }
+                .customer-info { padding: 15px 30px; background: #f8fafc; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 15px; border-bottom: 1px solid #e2e8f0; }
                 .customer-info div { flex: 1; }
                 .customer-info strong { color: #1f2937; font-size: 12px; display: block; margin-bottom: 4px; }
                 .customer-info p { color: #4b5563; font-size: 13px; }
-                .filename-info {
-                    background: #e8f0fe;
-                    padding: 10px 30px;
-                    font-size: 11px;
-                    color: #1e3a8a;
-                    border-bottom: 1px solid #e2e8f0;
-                    text-align: center;
-                }
                 .items-table { padding: 15px 30px; }
                 .items-table table { width: 100%; border-collapse: collapse; }
-                .items-table th {
-                    background: #f1f5f9;
-                    padding: 10px 8px;
-                    text-align: left;
-                    font-size: 12px;
-                    font-weight: 600;
-                    color: #1e293b;
-                    border: 1px solid #cbd5e1;
-                }
-                .items-table td {
-                    padding: 8px;
-                    font-size: 12px;
-                    color: #334155;
-                    border: 1px solid #cbd5e1;
-                }
+                .items-table th { background: #f1f5f9; padding: 10px 8px; text-align: left; font-size: 12px; font-weight: 600; color: #1e293b; border: 1px solid #cbd5e1; }
+                .items-table td { padding: 8px; font-size: 12px; color: #334155; border: 1px solid #cbd5e1; }
                 .items-table th:first-child, .items-table td:first-child { text-align: center; width: 40px; }
                 .items-table th:nth-child(3), .items-table td:nth-child(3) { text-align: center; width: 60px; }
                 .items-table th:nth-child(4), .items-table td:nth-child(4) { text-align: right; width: 80px; }
                 .items-table th:nth-child(5), .items-table td:nth-child(5) { text-align: right; width: 80px; }
-                .totals {
-                    padding: 15px 30px;
-                    background: #f8fafc;
-                    text-align: right;
-                    border-top: 2px solid #e2e8f0;
-                }
+                .totals { padding: 15px 30px; background: #f8fafc; text-align: right; border-top: 2px solid #e2e8f0; }
                 .totals table { width: 280px; margin-left: auto; border-collapse: collapse; }
                 .totals td { padding: 6px 10px; font-size: 13px; }
                 .totals td:first-child { text-align: left; font-weight: 500; }
@@ -851,112 +792,44 @@ function generatePreviewHTML(invoice, isEdit = false) {
                 .totals .grand-total td { font-size: 16px; font-weight: 800; color: #1e3a8a; border-top: 2px solid #cbd5e1; }
                 .notes { padding: 15px 30px; background: white; border-top: 1px solid #e2e8f0; font-style: italic; color: #6b7280; font-size: 12px; }
                 .footer { padding: 12px 30px; background: #f1f5f9; text-align: center; font-size: 10px; color: #64748b; }
-                .button-container {
-                    padding: 20px 30px;
-                    background: white;
-                    text-align: center;
-                    border-top: 1px solid #e2e8f0;
-                }
-                .print-btn {
-                    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-                    color: white;
-                    padding: 12px 24px;
-                    border: none;
-                    border-radius: 8px;
-                    font-size: 16px;
-                    font-weight: bold;
-                    cursor: pointer;
-                    margin-right: 10px;
-                    transition: transform 0.2s;
-                }
-                .print-btn:hover { transform: scale(1.02); }
-                .close-btn {
-                    background: #6b7280;
-                    color: white;
-                    padding: 12px 24px;
-                    border: none;
-                    border-radius: 8px;
-                    font-size: 16px;
-                    font-weight: bold;
-                    cursor: pointer;
-                    transition: transform 0.2s;
-                }
-                .close-btn:hover { transform: scale(1.02); }
-                @media print {
-                    .button-container, .print-btn, .close-btn, .filename-info {
-                        display: none !important;
-                    }
-                    body {
-                        background: white;
-                        padding: 0;
-                        margin: 0;
-                    }
-                    .invoice-container {
-                        box-shadow: none;
-                        border-radius: 0;
-                    }
-                }
+                .button-container { padding: 20px 30px; background: white; text-align: center; border-top: 1px solid #e2e8f0; }
+                .print-btn { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 12px 24px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-right: 10px; }
+                .close-btn { background: #6b7280; color: white; padding: 12px 24px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
+                @media print { .button-container, .print-btn, .close-btn, .filename-info { display: none !important; } body { background: white; padding: 0; } .invoice-container { box-shadow: none; border-radius: 0; } }
             </style>
         </head>
         <body>
             <div class="invoice-container">
-                <div class="invoice-header">
-                    <h1>${escapeHtml(invoice.businessName)}</h1>
-                    <p>${escapeHtml(invoice.businessContact)}</p>
-                </div>
+                <div class="invoice-header"><h1>${escapeHtml(invoice.businessName)}</h1><p>${escapeHtml(invoice.businessContact)}</p></div>
                 <div class="invoice-title"><h2>TAX INVOICE</h2></div>
-                <div class="filename-info">
-                    📄 ${currentLanguage === 'tamil' ? 'PDF கோப்பு பெயர்:' : 'PDF File Name:'} <strong>${fileName}</strong>
-                </div>
+                <div class="filename-info">📄 ${currentLanguage === 'tamil' ? 'PDF கோப்பு பெயர்:' : 'PDF File Name:'} <strong>${fileName}</strong></div>
                 <div class="customer-info">
                     <div><strong>BILL TO:</strong><p>${escapeHtml(invoice.customerName)}</p>${invoice.customerMobile ? `<p>Mobile: ${escapeHtml(invoice.customerMobile)}</p>` : ''}</div>
                     <div><strong>INVOICE DETAILS:</strong><p>No: ${invoice.invoiceNo}</p><p>Date: ${invoice.date}</p></div>
                 </div>
-                <div class="items-table">
-                    <table>
-                        <thead><tr><th>#</th><th>ITEM</th><th>QTY</th><th>PRICE</th><th>TOTAL</th></tr></thead>
-                        <tbody>${itemsHtml}</tbody>
-                    </table>
-                </div>
-                <div class="totals">
-                    <table>
-                        <tr><td>Subtotal</td><td>₹ ${invoice.subtotal}</td></tr>
-                        <td>${gstText}</td><td>₹ ${gstAmount}</td></tr>
-                        <tr class="grand-total"><td>TOTAL</td><td>₹ ${invoice.total}</td></tr>
-                    </table>
-                </div>
+                <div class="items-table"><table><thead><tr><th>#</th><th>ITEM</th><th>QTY</th><th>PRICE</th><th>TOTAL</th></tr></thead><tbody>${itemsHtml}</tbody></table></div>
+                <div class="totals"><table><tr><td>Subtotal</td><td>₹ ${invoice.subtotal}</td></tr><tr><td>${gstText}</td><td>₹ ${gstAmount}</td></tr><tr class="grand-total"><td>TOTAL</td><td>₹ ${invoice.total}</td></tr></table></div>
                 <div class="notes"><p>📝 ${escapeHtml(invoice.tamilNotes || thankyouText)}</p></div>
                 <div class="footer"><p>${thankyouText} | ${poweredText}</p></div>
-                <div class="button-container">
-                    <button class="print-btn" onclick="window.print()">🖨️ ${t.printPDF}</button>
-                    <button class="close-btn" onclick="window.close()">❌ ${t.closePreview}</button>
-                </div>
+                <div class="button-container"><button class="print-btn" onclick="window.print()">🖨️ ${t.printPDF}</button><button class="close-btn" onclick="window.close()">❌ ${t.closePreview}</button></div>
             </div>
-            <script>
-                // Set the document title for the PDF
-                document.title = "${fileName.replace('.pdf', '')}";
-            </script>
+            <script>document.title = "${fileName.replace('.pdf', '')}";<\/script>
         </body>
         </html>
     `;
 }
 
-// Show Preview Window
 function showPreview(invoice, isEdit = false) {
     const t = translations[currentLanguage];
     const htmlContent = generatePreviewHTML(invoice, isEdit);
     
-    // Open preview window
-    if (previewWindow && !previewWindow.closed) {
-        previewWindow.close();
-    }
+    if (previewWindow && !previewWindow.closed) previewWindow.close();
     previewWindow = window.open('', '_blank', 'width=900,height=800,scrollbars=yes,resizable=yes');
     previewWindow.document.write(htmlContent);
     previewWindow.document.close();
     previewWindow.focus();
 }
 
-// Save Invoice - Main Function
 async function saveInvoice() {
     const t = translations[currentLanguage];
     const businessName = document.getElementById('businessName').value || 'My Business';
@@ -1023,7 +896,6 @@ async function saveInvoice() {
     const nextNum = await getNextInvoiceNumber();
     document.getElementById('nextInvoiceNumber').textContent = nextNum;
     
-    // Show preview
     showPreview(invoice, !!editingInvoiceId);
 }
 
@@ -1143,9 +1015,9 @@ async function loadInvoices() {
             </div>
             <div class="text-xs text-gray-400 mt-1">${inv.items.length} item(s)</div>
             <div class="flex gap-2 mt-2 pt-2 border-t">
-                <button onclick="viewInvoicePreview(${inv.id})" class="flex-1 bg-blue-500 text-white px-2 py-1 rounded-lg text-xs"><i class="fas fa-eye"></i> ${t.view}</button>
-                <button onclick="editInvoice(${inv.id})" class="flex-1 bg-yellow-500 text-white px-2 py-1 rounded-lg text-xs"><i class="fas fa-edit"></i> ${t.edit}</button>
-                <button onclick="deleteInvoice(${inv.id})" class="flex-1 bg-red-500 text-white px-2 py-1 rounded-lg text-xs"><i class="fas fa-trash"></i> ${t.delete}</button>
+                <button onclick="viewInvoicePreview(${inv.id})" class="flex-1 bg-blue-500 text-white px-2 py-1.5 rounded-lg text-xs"><i class="fas fa-eye"></i> ${t.view}</button>
+                <button onclick="editInvoice(${inv.id})" class="flex-1 bg-yellow-500 text-white px-2 py-1.5 rounded-lg text-xs"><i class="fas fa-edit"></i> ${t.edit}</button>
+                <button onclick="deleteInvoice(${inv.id})" class="flex-1 bg-red-500 text-white px-2 py-1.5 rounded-lg text-xs"><i class="fas fa-trash"></i> ${t.delete}</button>
             </div>
         </div>
     `).join('');
@@ -1153,9 +1025,7 @@ async function loadInvoices() {
 
 async function viewInvoicePreview(invoiceId) {
     const invoice = await getInvoiceById(invoiceId);
-    if (invoice) {
-        showPreview(invoice);
-    }
+    if (invoice) showPreview(invoice);
 }
 
 async function clearAllData() {
