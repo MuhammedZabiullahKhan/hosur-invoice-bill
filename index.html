@@ -8,7 +8,6 @@
     <meta name="author" content="Shri Muhammed Zabiullah Khan">
     <meta name="theme-color" content="#0f172a">
     
-    <!-- Important: Fix GitHub Pages 404 -->
     <link rel="manifest" href="manifest.json">
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -246,7 +245,6 @@
             background-color: #f0f0f0;
         }
         
-        /* Date filter styles */
         .date-filter {
             display: flex;
             gap: 8px;
@@ -259,7 +257,6 @@
             border: 1px solid #ddd;
         }
         
-        /* Warning box */
         .warning-box {
             background: #fef3c7;
             border-left: 4px solid #f59e0b;
@@ -276,7 +273,6 @@
             font-size: 12px;
         }
         
-        /* Mobile Responsive */
         @media (max-width: 640px) {
             body { padding: 8px; }
             .text-xl { font-size: 1.125rem; }
@@ -306,18 +302,15 @@
                 <button onclick="closeSettings()" class="text-2xl">&times;</button>
             </div>
             
-            <!-- UPI QR Upload -->
             <div class="mb-6 border-b pb-4">
                 <h3 class="font-semibold mb-2" id="qrUploadTitle"><i class="fas fa-qrcode text-green-600"></i> Your Payment QR Code</h3>
                 <p class="text-xs text-gray-500 mb-2" id="qrUploadDesc">Upload your GPay/PhonePe/Paytm QR code</p>
-                
                 <div id="qrPreviewContainer" class="flex justify-center mb-3">
                     <img id="qrPreview" class="qr-preview" style="display: none;" alt="QR Preview">
                     <div id="qrPlaceholder" class="w-24 h-24 bg-gray-100 rounded-xl flex items-center justify-center text-gray-400">
                         <i class="fas fa-qrcode text-4xl"></i>
                     </div>
                 </div>
-                
                 <input type="file" id="qrUpload" accept="image/*" class="hidden">
                 <button id="uploadQRBtn" onclick="document.getElementById('qrUpload').click()" class="w-full bg-blue-500 text-white px-3 py-2 rounded-lg text-sm hover:bg-blue-600 transition mb-2">
                     <i class="fas fa-upload"></i> Upload QR Code
@@ -327,7 +320,6 @@
                 </button>
             </div>
             
-            <!-- GST Settings -->
             <div class="mb-6 border-b pb-4">
                 <h3 class="font-semibold mb-2" id="gstTitle"><i class="fas fa-percent text-blue-600"></i> GST Settings</h3>
                 <div class="flex items-center justify-between mb-3">
@@ -347,7 +339,6 @@
                 <p class="text-xs text-gray-500 mt-2" id="gstInfoText">Current GST: 0% (Disabled)</p>
             </div>
             
-            <!-- Theme Selection -->
             <div class="mb-6 border-b pb-4">
                 <h3 class="font-semibold mb-2" id="themeTitle">🎨 Theme Color</h3>
                 <div class="flex gap-3 flex-wrap">
@@ -359,7 +350,6 @@
                 </div>
             </div>
             
-            <!-- Clear Data -->
             <div class="mb-6 border-b pb-4">
                 <h3 class="font-semibold mb-2" id="dataTitle">🗑️ Data Management</h3>
                 <button id="clearDataBtn" onclick="clearAllData()" class="w-full bg-red-500 text-white px-4 py-2 rounded-xl hover:bg-red-600 transition">
@@ -368,10 +358,8 @@
                 <p class="text-xs text-gray-500 mt-1" id="clearWarning">Warning: This will delete all your invoices from browser cache</p>
             </div>
             
-            <!-- About Section with Instructions -->
             <div class="mb-4">
                 <h3 class="font-semibold mb-2" id="aboutTitle"><i class="fas fa-info-circle"></i> About & Instructions</h3>
-                
                 <div class="warning-box">
                     <h4 id="warningTitle">⚠️ Important Warning:</h4>
                     <ul id="warningList">
@@ -381,7 +369,6 @@
                         <li>• You are responsible for backing up your invoices</li>
                     </ul>
                 </div>
-                
                 <div class="text-sm space-y-2">
                     <p><strong id="howToTitle">📖 How to Use:</strong></p>
                     <ol id="howToList" class="list-decimal list-inside space-y-1 text-xs">
@@ -395,14 +382,12 @@
                         <li>Use "New Bill" button for next customer</li>
                     </ol>
                 </div>
-                
                 <div class="mt-3 text-xs text-gray-500">
                     <p><strong id="techTitle">🛠️ Technical:</strong></p>
                     <p id="techText">Your invoices are stored in your browser's IndexedDB. If you clear cache, data will be lost. Always save PDFs.</p>
                 </div>
             </div>
             
-            <!-- Contact -->
             <div class="pt-2 border-t">
                 <p class="text-sm"><i class="fas fa-envelope"></i> <a href="mailto:0gbtechintel@gmail.com" class="text-blue-500">0gbtechintel@gmail.com</a></p>
                 <p class="text-sm"><i class="fas fa-phone"></i> <a href="tel:9087119440" class="text-blue-500">9087119440</a></p>
@@ -411,7 +396,6 @@
         </div>
     </div>
     
-    <!-- Payment QR Modal -->
     <div class="modal" id="paymentQRModal">
         <div class="modal-content">
             <div class="flex justify-between items-center mb-3">
@@ -432,7 +416,6 @@
     
     <div class="container-custom max-w-6xl mx-auto">
         
-        <!-- Header -->
         <div class="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-3 md:p-6 mb-3 md:mb-4 no-print card-hover animate-fadeInUp">
             <div class="flex flex-col sm:flex-row justify-between items-center gap-3">
                 <div class="text-center sm:text-left">
@@ -441,16 +424,13 @@
                             <i class="fas fa-file-invoice text-white text-xl md:text-2xl"></i>
                         </div>
                         <div>
-                            <h1 class="text-xl md:text-2xl lg:text-3xl font-extrabold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent" id="appTitle">
-                                ஹொசூர் இன்வாய்ஸ்
-                            </h1>
+                            <h1 class="text-xl md:text-2xl lg:text-3xl font-extrabold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent" id="appTitle">Hosur Invoice Bill</h1>
                             <p class="text-[10px] md:text-xs text-gray-500" id="subtitleText">Hosur Invoice Bill</p>
                         </div>
                     </div>
                     <p class="text-[9px] md:text-xs text-gray-400 mt-0.5" id="createdByText">by Shri Muhammed Zabiullah Khan | PrimeSys Solutions</p>
                 </div>
                 
-                <!-- Digital Clock -->
                 <div class="bg-gradient-to-r from-gray-900 to-gray-800 rounded-xl p-2 md:p-3 px-3 md:px-6 shadow-lg">
                     <div class="text-center">
                         <div class="text-xl md:text-2xl lg:text-3xl font-mono font-bold text-white" id="digitalClock">12:00:00 AM</div>
@@ -458,25 +438,23 @@
                     </div>
                 </div>
                 
-                <!-- Action Buttons -->
                 <div class="flex gap-2 flex-wrap justify-center">
                     <button id="showQRBtn" onclick="showPaymentQR()" class="bg-green-500 hover:bg-green-600 text-white px-3 md:px-4 py-1.5 md:py-2 rounded-xl font-semibold shadow-md transition active:scale-95 flex items-center gap-1 md:gap-2 text-sm md:text-base">
-                        <i class="fas fa-qrcode"></i> <span>Show QR</span>
+                        <i class="fas fa-qrcode"></i> <span id="showQRBtnText">Show QR</span>
                     </button>
                     <button id="langBtn" onclick="toggleLanguage()" class="bg-blue-500 hover:bg-blue-600 text-white px-3 md:px-4 py-1.5 md:py-2 rounded-xl font-semibold shadow-md transition active:scale-95 flex items-center gap-1 md:gap-2 text-sm md:text-base">
-                        <i class="fas fa-language"></i> <span>தமிழ்</span>
+                        <i class="fas fa-language"></i> <span id="langBtnText">தமிழ்</span>
                     </button>
                     <button id="installAppBtn" onclick="promptInstallApp()" class="install-btn text-white px-3 md:px-4 py-1.5 md:py-2 rounded-xl font-semibold shadow-md transition active:scale-95 flex items-center gap-1 md:gap-2 text-sm md:text-base">
                         <i class="fas fa-download"></i> <span id="installBtnText">Install App</span>
                     </button>
                     <button id="settingsBtn" onclick="openSettings()" class="bg-gray-500 hover:bg-gray-600 text-white px-3 md:px-4 py-1.5 md:py-2 rounded-xl font-semibold shadow-md transition active:scale-95 flex items-center gap-1 md:gap-2 text-sm md:text-base">
-                        <i class="fas fa-cog"></i> <span>Settings</span>
+                        <i class="fas fa-cog"></i> <span id="settingsBtnText">Settings</span>
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- Quick Tips -->
         <div class="bg-yellow-50 border-l-4 border-yellow-400 rounded-xl p-2 md:p-3 mb-3 md:mb-4 no-print animate-slideInLeft">
             <div class="flex items-center gap-2 text-xs md:text-sm">
                 <i class="fas fa-lightbulb text-yellow-600"></i>
@@ -484,7 +462,6 @@
             </div>
         </div>
 
-        <!-- Business Details Card -->
         <div class="bg-white rounded-2xl shadow-xl p-3 md:p-6 mb-3 md:mb-4 card-hover animate-slideInRight">
             <div class="flex items-center gap-2 mb-3 md:mb-4">
                 <i class="fas fa-store text-blue-600 text-lg md:text-xl"></i>
@@ -513,7 +490,6 @@
             </div>
         </div>
 
-        <!-- Create Invoice Card -->
         <div class="bg-white rounded-2xl shadow-xl p-3 md:p-6 mb-3 md:mb-4 card-hover animate-fadeInUp">
             <div class="flex items-center justify-between mb-3 md:mb-4 flex-wrap gap-2">
                 <div class="flex items-center gap-2">
@@ -525,7 +501,6 @@
                 </button>
             </div>
             
-            <!-- Customer Details -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 mb-3 md:mb-4">
                 <div>
                     <label class="block text-xs md:text-sm font-medium text-gray-700 mb-1" id="customerNameLabel">Customer Name</label>
@@ -537,7 +512,6 @@
                 </div>
             </div>
             
-            <!-- Items Table -->
             <div class="mb-3 md:mb-4">
                 <label class="block text-xs md:text-sm font-medium text-gray-700 mb-2" id="itemsLabel">📦 Items</label>
                 <div class="items-table-wrapper overflow-x-auto">
@@ -559,7 +533,6 @@
                 </button>
             </div>
             
-            <!-- Summary -->
             <div class="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-3 md:p-4 mb-3 md:mb-4">
                 <div class="flex flex-wrap justify-end gap-2 md:gap-3 text-right">
                     <div class="text-xs md:text-sm"><span id="subtotalLabel">Subtotal</span>: ₹<span id="subtotal">0</span></div>
@@ -568,19 +541,16 @@
                 </div>
             </div>
             
-            <!-- Notes -->
             <div class="mb-3 md:mb-4">
                 <label class="block text-xs md:text-sm font-medium text-gray-700 mb-1" id="notesLabel">Notes (Tamil)</label>
-                <textarea id="tamilNotes" rows="2" class="w-full border-2 border-gray-300 p-2 md:p-3 rounded-xl focus:border-blue-500 focus:outline-none transition text-sm md:text-base">நன்றி! மீண்டும் வருக</textarea>
+                <textarea id="tamilNotes" rows="2" class="w-full border-2 border-gray-300 p-2 md:p-3 rounded-xl focus:border-blue-500 focus:outline-none transition text-sm md:text-base"></textarea>
             </div>
             
-            <!-- Save Button -->
             <button id="saveInvoiceBtn" onclick="saveInvoice()" class="btn-primary w-full text-white px-4 md:px-6 py-3 md:py-4 rounded-xl font-bold text-sm md:text-base shadow-xl transition active:scale-98 flex items-center justify-center gap-2 md:gap-3">
                 <i class="fas fa-save text-sm md:text-base"></i> <span id="saveBtnText">Save Invoice & Preview</span>
             </button>
         </div>
 
-        <!-- Date Filter & Invoices List -->
         <div class="bg-white rounded-2xl shadow-xl p-3 md:p-6 animate-slideInLeft">
             <div class="flex flex-wrap justify-between items-center mb-3 md:mb-4 gap-3">
                 <div class="flex items-center gap-2">
@@ -602,7 +572,6 @@
             </div>
         </div>
         
-        <!-- Footer -->
         <div class="text-center text-white text-[9px] md:text-xs py-3 md:py-4 opacity-75 no-print animate-fadeInUp">
             <p>© 2026 Hosur Invoice Bill | <a href="mailto:0gbtechintel@gmail.com" class="text-white underline">0gbtechintel@gmail.com</a> | <a href="tel:9087119440" class="text-white underline">9087119440</a></p>
             <p>Developed by Shri Muhammed Zabiullah Khan | PrimeSys Solutions</p>
@@ -613,7 +582,6 @@
     <script src="app.js"></script>
     
     <script>
-        // 12-Hour Digital Clock
         function updateClock() {
             const now = new Date();
             let hours = now.getHours();
@@ -622,54 +590,64 @@
             const ampm = hours >= 12 ? 'PM' : 'AM';
             hours = hours % 12 || 12;
             document.getElementById('digitalClock').textContent = `${hours}:${minutes}:${seconds} ${ampm}`;
-            document.getElementById('dateDisplay').textContent = now.toLocaleDateString('ta-IN', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-            });
+            document.getElementById('dateDisplay').textContent = now.toLocaleDateString('ta-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
         }
         updateClock();
         setInterval(updateClock, 1000);
         
-        // PWA Install Prompt
         let deferredPrompt = null;
         let isAppInstalled = false;
         
-        window.addEventListener('load', () => {
-            if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+        function checkIfAppInstalled() {
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+            if (isStandalone) {
                 isAppInstalled = true;
                 const installBtn = document.getElementById('installAppBtn');
                 if (installBtn) installBtn.style.display = 'none';
+                return true;
             }
-        });
+            return false;
+        }
+        
+        checkIfAppInstalled();
+        
+        window.addEventListener('load', () => { setTimeout(checkIfAppInstalled, 500); });
         
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
-            const installBtn = document.getElementById('installAppBtn');
-            if (installBtn && !isAppInstalled) installBtn.style.display = 'flex';
+            if (!checkIfAppInstalled()) {
+                const installBtn = document.getElementById('installAppBtn');
+                if (installBtn) installBtn.style.display = 'flex';
+            }
         });
         
         window.addEventListener('appinstalled', () => {
             isAppInstalled = true;
-            deferredPrompt = null;
             const installBtn = document.getElementById('installAppBtn');
             if (installBtn) installBtn.style.display = 'none';
             showToast('✅ App installed successfully!');
         });
         
         function promptInstallApp() {
+            if (checkIfAppInstalled()) {
+                showToast('App is already installed! Open from home screen.');
+                const installBtn = document.getElementById('installAppBtn');
+                if (installBtn) installBtn.style.display = 'none';
+                return;
+            }
             if (deferredPrompt) {
                 deferredPrompt.prompt();
                 deferredPrompt.userChoice.then((choiceResult) => {
                     if (choiceResult.outcome === 'accepted') {
-                        console.log('User accepted install');
+                        isAppInstalled = true;
+                        const installBtn = document.getElementById('installAppBtn');
+                        if (installBtn) installBtn.style.display = 'none';
                     }
                     deferredPrompt = null;
                 });
             } else {
-                showToast('Install from browser menu: Add to Home Screen');
+                showToast('To install: Tap browser menu → "Add to Home Screen"');
             }
         }
         
