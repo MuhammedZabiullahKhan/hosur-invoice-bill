@@ -66,22 +66,38 @@ function playSound(type) {
 // DATE FORMAT CONVERSION FUNCTIONS             //
 // ============================================ //
 
-// Convert DD/MM/YYYY to YYYY-MM-DD for comparison
-function convertToCompareDate(dateStr) {
+// Normalize date to standard format DD/MM/YYYY with leading zeros
+function normalizeDate(dateStr) {
     if (!dateStr) return '';
-    // Check if already in YYYY-MM-DD format
-    if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
-        return dateStr;
-    }
-    // Convert from DD/MM/YYYY
-    const parts = dateStr.split('/');
-    if (parts.length === 3) {
-        return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+    
+    // If already in DD/MM/YYYY format with possible single digits
+    if (dateStr.includes('/')) {
+        const parts = dateStr.split('/');
+        if (parts.length === 3) {
+            const day = parts[0].padStart(2, '0');
+            const month = parts[1].padStart(2, '0');
+            const year = parts[2];
+            return `${day}/${month}/${year}`;
+        }
     }
     return dateStr;
 }
 
-// Get today's date in YYYY-MM-DD format for filter
+// Convert YYYY-MM-DD to DD/MM/YYYY for comparison
+function convertToDisplayDate(dateStr) {
+    if (!dateStr) return '';
+    if (dateStr.includes('/')) return normalizeDate(dateStr);
+    const parts = dateStr.split('-');
+    if (parts.length === 3) {
+        const day = parts[2].padStart(2, '0');
+        const month = parts[1].padStart(2, '0');
+        const year = parts[0];
+        return `${day}/${month}/${year}`;
+    }
+    return dateStr;
+}
+
+// Get today's date in YYYY-MM-DD format for filter input
 function getTodayDateForFilter() {
     const today = new Date();
     return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
@@ -90,12 +106,7 @@ function getTodayDateForFilter() {
 // Format date for display (DD/MM/YYYY)
 function formatDisplayDate(date) {
     if (!date) return '';
-    if (date.includes('/')) return date;
-    const parts = date.split('-');
-    if (parts.length === 3) {
-        return `${parts[2]}/${parts[1]}/${parts[0]}`;
-    }
-    return date;
+    return normalizeDate(date);
 }
 
 // ============================================ //
@@ -1003,8 +1014,10 @@ function generatePreviewHTML(invoice) {
             <div class="filename-info">📄 ${currentLanguage === 'tamil' ? 'PDF கோப்பு பெயர்:' : 'PDF File Name:'} <strong>${fileName}</strong></div>
             <div class="customer-info"><div><strong>BILL TO:</strong><p>${escapeHtml(invoice.customerName)}</p>${invoice.customerMobile ? `<p>📞 ${escapeHtml(invoice.customerMobile)}</p>` : ''}</div>
             <div><strong>INVOICE DETAILS:</strong><p>Invoice No: ${invoice.invoiceNo}</p><p>Date: ${invoice.date}</p></div></div>
-            <div class="items-table"><table><thead><tr><th>#</th><th>ITEM DESCRIPTION</th><th>QTY</th><th>PRICE</th><th>TOTAL</th></tr></thead><tbody>${itemsHtml}</tbody></table></div>
-            <div class="totals"><table><tr><td>Subtotal</td><td>₹ ${invoice.subtotal}</td></tr><tr><td>${gstText}</td><td>₹ ${gstAmount}</td></tr><tr class="grand-total"><td>TOTAL</td><td>₹ ${invoice.total}</td></tr></table></div>
+            <div class="items-table"></td><thead><tr><th>#</th><th>ITEM DESCRIPTION</th><th>QTY</th><th>PRICE</th><th>TOTAL</th></tr></thead><tbody>${itemsHtml}</tbody></table></div>
+            <div class="totals"><table><td>Subtotal</td>lakang₹ ${invoice.subtotal}</td></tr>
+            <tr><td>${gstText}</td><td>₹ ${gstAmount}</td></tr>
+            <tr class="grand-total"><td>TOTAL</td><td>₹ ${invoice.total}</td></tr></table></div>
             <div class="notes"><p>📝 ${escapeHtml(invoice.tamilNotes || thankyouText)}</p></div>
             <div class="footer"><p>${thankyouText} | ${poweredText}</p></div>
             <div class="button-container"><button class="print-btn" onclick="window.print()">🖨️ ${t.printPDF}</button><button class="close-btn" onclick="window.close()">❌ ${t.closePreview}</button></div>
@@ -1056,7 +1069,8 @@ async function saveInvoice() {
     }
     
     const { subtotal, gst, total } = calculateAllTotals();
-    const date = new Date().toLocaleDateString('en-IN');
+    const today = new Date();
+    const date = `${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`;
     const timestamp = new Date().toISOString();
     
     let invoice;
@@ -1224,15 +1238,19 @@ async function applyDateFilter() {
         return;
     }
     
-    currentFilterDate = selectedDate;
+    // Convert selected date to DD/MM/YYYY format with proper normalization
+    const parts = selectedDate.split('-');
+    const normalizedFilterDate = `${parseInt(parts[2])}/${parseInt(parts[1])}/${parts[0]}`;
+    
+    currentFilterDate = normalizedFilterDate;
     await loadInvoices();
     
     const t = translations[currentLanguage];
-    const formattedDate = formatDisplayDate(selectedDate);
+    const displayDate = normalizeDate(normalizedFilterDate);
     if (typeof t.filterApplied === 'function') {
-        showToast(t.filterApplied(formattedDate));
+        showToast(t.filterApplied(displayDate));
     } else {
-        showToast(`📅 Showing invoices for ${formattedDate}`);
+        showToast(`📅 Showing invoices for ${displayDate}`);
     }
 }
 
@@ -1257,23 +1275,12 @@ async function loadInvoices() {
         const countSpan = document.getElementById('invoiceCount');
         const t = translations[currentLanguage];
         
-        // Debug: Log all invoices and their dates
-        console.log('All invoices:', invoices.map(inv => ({ id: inv.id, date: inv.date, customer: inv.customerName })));
-        
-        // Apply date filter using proper date comparison
+        // Apply date filter with normalized date comparison
         let filteredInvoices = [...invoices];
         if (currentFilterDate) {
-            // Convert filter date to DD/MM/YYYY format for comparison
-            const filterDateParts = currentFilterDate.split('-');
-            const filterDateDMY = `${filterDateParts[2]}/${filterDateParts[1]}/${filterDateParts[0]}`;
-            console.log('Filtering by date:', currentFilterDate, 'converted to:', filterDateDMY);
-            
             filteredInvoices = filteredInvoices.filter(inv => {
-                const invoiceDate = inv.date;
-                // Compare the date strings directly (both in DD/MM/YYYY format)
-                const matches = invoiceDate === filterDateDMY;
-                console.log(`Invoice date: ${invoiceDate}, Filter: ${filterDateDMY}, Match: ${matches}`);
-                return matches;
+                const normalizedInvoiceDate = normalizeDate(inv.date);
+                return normalizedInvoiceDate === currentFilterDate;
             });
         }
         
@@ -1284,7 +1291,7 @@ async function loadInvoices() {
         
         if (filteredInvoices.length === 0) {
             if (currentFilterDate) {
-                const formattedDate = formatDisplayDate(currentFilterDate);
+                const formattedDate = normalizeDate(currentFilterDate);
                 container.innerHTML = `<div class="text-center text-gray-500 py-8">
                     <i class="fas fa-calendar-times text-4xl mb-2 opacity-50"></i>
                     <p class="text-sm">${currentLanguage === 'tamil' ? `📅 ${formattedDate} தேதியில் இன்வாய்ஸ் இல்லை` : `📅 No invoices found for ${formattedDate}`}</p>
@@ -1451,7 +1458,7 @@ async function init() {
         loadGSTSettings();
         applyTranslations();
         
-        // Set default filter date to empty
+        // Set default filter date to null (show all)
         currentFilterDate = null;
         
         console.log('✅ Hosur Invoice Bill v3.0 - Fully Loaded!');
