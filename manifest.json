@@ -2,7 +2,7 @@
   "name": "Hosur Invoice Bill",
   "short_name": "Hosur Bill",
   "description": "Free offline-first invoice generator for Hosur businesses",
-  "start_url": "/",
+  "start_url": "https://muhammedzabiullahkhan.github.io/hosur-invoice-bill/",
   "display": "standalone",
   "theme_color": "#0f172a",
   "background_color": "#ffffff",
