@@ -263,7 +263,6 @@ function setText(elementId, text) {
 function applyTranslations() {
     const t = translations[currentLanguage];
     
-    // Main elements
     const elements = ['appTitle', 'subtitleText', 'createdByText', 'showQRBtn', 'settingsBtn', 'newBillBtn',
         'businessTitle', 'businessNameLabel', 'businessContactLabel', 'invoicePrefixLabel', 'nextInvoiceLabel',
         'createInvoiceTitle', 'customerNameLabel', 'customerMobileLabel', 'itemsLabel', 'itemNameHeader',
@@ -279,13 +278,11 @@ function applyTranslations() {
         if (el && t[id]) el.textContent = t[id];
     });
     
-    // Set placeholder text for warning list (as HTML)
     const warningList = document.getElementById('warningList');
     if (warningList && t.warningList) {
         warningList.innerHTML = t.warningList.split('\n').map(item => `<li>${item}</li>`).join('');
     }
     
-    // Set how-to list
     const howToList = document.getElementById('howToList');
     if (howToList && t.howToList) {
         howToList.innerHTML = t.howToList.split('\n').map(item => `<li>${item}</li>`).join('');
@@ -297,7 +294,6 @@ function applyTranslations() {
     
     updateGSTLabel();
     
-    // Placeholders
     const businessNameInput = document.getElementById('businessName');
     const businessContactInput = document.getElementById('businessContact');
     const customerNameInput = document.getElementById('customerName');
@@ -328,7 +324,6 @@ function applyTranslations() {
         }
     }
     
-    // Re-render invoices to update button texts
     loadInvoices();
 }
 
@@ -409,6 +404,7 @@ function removeQRCode() {
     showToast(translations[currentLanguage].qrRemoved);
 }
 
+// FIXED: Complete reset for new bill - clears edit mode properly
 function resetForNewBill() {
     const t = translations[currentLanguage];
     
@@ -426,7 +422,7 @@ function resetForNewBill() {
     }
     calculateAllTotals();
     
-    // CRITICAL: Clear editing mode
+    // CRITICAL FIX: Clear editing mode completely
     if (editingInvoiceId) {
         editingInvoiceId = null;
         const saveBtn = document.getElementById('saveInvoiceBtn');
@@ -440,8 +436,51 @@ function resetForNewBill() {
         if (cancelBtn) cancelBtn.style.display = 'none';
     }
     
+    // Also reset any pending edit state in the UI
+    const titleSpan = document.getElementById('createInvoiceTitle');
+    if (titleSpan && !editingInvoiceId) {
+        titleSpan.innerHTML = t.createInvoice;
+    }
+    
     showToast(t.newBillReady);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// FIXED: Cancel edit function
+function cancelEdit() {
+    const t = translations[currentLanguage];
+    editingInvoiceId = null;
+    
+    // Clear form
+    document.getElementById('customerName').value = '';
+    document.getElementById('customerMobile').value = '';
+    document.getElementById('tamilNotes').value = t.notesPlaceholder;
+    
+    // Reset items table
+    const tbody = document.getElementById('itemsTable');
+    if (tbody) {
+        tbody.innerHTML = '';
+        itemCounter = 0;
+        addItemRow();
+    }
+    calculateAllTotals();
+    
+    // Reset button appearance
+    const saveBtn = document.getElementById('saveInvoiceBtn');
+    if (saveBtn) {
+        saveBtn.innerHTML = `<i class="fas fa-save"></i> ${t.saveInvoice}`;
+        saveBtn.classList.remove('bg-orange-500', 'hover:bg-orange-600');
+        saveBtn.classList.add('btn-primary');
+    }
+    
+    // Reset title
+    document.getElementById('createInvoiceTitle').innerHTML = t.createInvoice;
+    
+    // Remove cancel button
+    const cancelBtn = document.getElementById('cancelEditBtn');
+    if (cancelBtn) cancelBtn.style.display = 'none';
+    
+    showToast('Edit cancelled');
 }
 
 // Database Functions
@@ -520,10 +559,16 @@ async function getSuggestions(storeName, query, limit = 5) {
         .map(item => item.name);
 }
 
+// FIXED: Auto-suggest - closes when input is cleared
 function createAutoComplete(inputElement, suggestions, onSelect) {
+    // Remove existing dropdown
     const existing = document.getElementById(`dropdown_${inputElement.id}`);
     if (existing) existing.remove();
-    if (!suggestions.length) return;
+    
+    // If no suggestions or input is empty, return
+    if (!suggestions.length || !inputElement.value.trim()) {
+        return;
+    }
     
     const dropdown = document.createElement('div');
     dropdown.id = `dropdown_${inputElement.id}`;
@@ -541,18 +586,21 @@ function createAutoComplete(inputElement, suggestions, onSelect) {
             inputElement.value = suggestion;
             onSelect(suggestion);
             dropdown.remove();
+            // Trigger calculation after selection
+            calculateAllTotals();
         };
         dropdown.appendChild(item);
     });
     document.body.appendChild(dropdown);
     
-    const close = (e) => {
+    // Close dropdown when clicking outside
+    const closeDropdown = (e) => {
         if (!dropdown.contains(e.target) && e.target !== inputElement) {
             dropdown.remove();
-            document.removeEventListener('click', close);
+            document.removeEventListener('click', closeDropdown);
         }
     };
-    setTimeout(() => document.addEventListener('click', close), 100);
+    setTimeout(() => document.addEventListener('click', closeDropdown), 100);
 }
 
 function getDigitalFootprint() {
@@ -664,6 +712,7 @@ function calculateAllTotals() {
     return { subtotal, gst, total };
 }
 
+// FIXED: Row event listeners - properly handle input clearing
 function addRowEventListeners(row) {
     const qtyInput = row.querySelector('.item-qty');
     const priceInput = row.querySelector('.item-price');
@@ -679,15 +728,30 @@ function addRowEventListeners(row) {
         nameInput.addEventListener('input', async (e) => {
             update();
             const query = e.target.value;
-            if (query.length >= 1) {
+            
+            // Remove existing dropdown
+            const existing = document.getElementById(`dropdown_${nameInput.id}`);
+            if (existing) existing.remove();
+            
+            // Only show suggestions if there's meaningful input
+            if (query && query.length >= 1) {
                 const suggestions = await getSuggestions('itemNames', query, 5);
-                createAutoComplete(nameInput, suggestions, async (selected) => {
-                    await saveToAutoComplete('itemNames', selected);
-                });
+                if (suggestions.length > 0 && nameInput.value.trim()) {
+                    createAutoComplete(nameInput, suggestions, async (selected) => {
+                        await saveToAutoComplete('itemNames', selected);
+                    });
+                }
             }
         });
         nameInput.addEventListener('blur', async () => {
-            if (nameInput.value.trim()) await saveToAutoComplete('itemNames', nameInput.value.trim());
+            if (nameInput.value.trim()) {
+                await saveToAutoComplete('itemNames', nameInput.value.trim());
+            }
+            // Remove dropdown on blur after delay
+            setTimeout(() => {
+                const dropdown = document.getElementById(`dropdown_${nameInput.id}`);
+                if (dropdown) dropdown.remove();
+            }, 200);
         });
     }
     update();
@@ -701,7 +765,7 @@ function addItemRow() {
     const newRow = document.createElement('tr');
     newRow.id = `itemRow_${rowId}`;
     newRow.innerHTML = `
-        <td class="border p-1"><input type="text" class="item-name w-full p-2 border rounded-lg" placeholder="${t.itemNamePlaceholder}" style="font-size:16px"></td>
+        <td class="border p-1"><input type="text" class="item-name w-full p-2 border rounded-lg" placeholder="${t.itemNamePlaceholder}" style="font-size:16px" id="itemName_${rowId}"></td>
         <td class="border p-1"><input type="number" class="item-qty w-full p-2 border rounded-lg" value="1" step="0.5" min="0" style="font-size:16px;text-align:center"></td>
         <td class="border p-1"><input type="number" class="item-price w-full p-2 border rounded-lg" value="0" step="1" min="0" style="font-size:16px;text-align:center"></td>
         <td class="border p-1 text-center"><span class="item-total font-bold">0</span></td>
@@ -812,8 +876,8 @@ function generatePreviewHTML(invoice, isEdit = false) {
                 <div class="filename-info">📄 ${currentLanguage === 'tamil' ? 'PDF கோப்பு பெயர்:' : 'PDF File Name:'} <strong>${fileName}</strong></div>
                 <div class="customer-info"><div><strong>BILL TO:</strong><p>${escapeHtml(invoice.customerName)}</p>${invoice.customerMobile ? `<p>Mobile: ${escapeHtml(invoice.customerMobile)}</p>` : ''}</div>
                 <div><strong>INVOICE DETAILS:</strong><p>No: ${invoice.invoiceNo}</p><p>Date: ${invoice.date}</p></div></div>
-                <div class="items-table"><table><thead><tr><th>#</th><th>ITEM</th><th>QTY</th><th>PRICE</th><th>TOTAL</th></tr></thead><tbody>${itemsHtml}</tbody></table></div>
-                <div class="totals"><td><td>Subtotal</td><td>₹ ${invoice.subtotal}</td></tr><tr><td>${gstText}</td><td>₹ ${gstAmount}</td></tr><tr class="grand-total"><td>TOTAL</td><td>₹ ${invoice.total}</td></tr></table></div>
+                <div class="items-table"><td><thead><tr><th>#</th><th>ITEM</th><th>QTY</th><th>PRICE</th><th>TOTAL</th></tr></thead><tbody>${itemsHtml}</tbody></table></div>
+                <div class="totals"><table><td>Subtotal</td><td>₹ ${invoice.subtotal}</td></tr><tr><td>${gstText}</td><td>₹ ${gstAmount}</td></tr><tr class="grand-total"><td>TOTAL</td><td>₹ ${invoice.total}</td></tr></table></div>
                 <div class="notes"><p>📝 ${escapeHtml(invoice.tamilNotes || thankyouText)}</p></div>
                 <div class="footer"><p>${thankyouText} | ${poweredText}</p></div>
                 <div class="button-container"><button class="print-btn" onclick="window.print()">🖨️ ${t.printPDF}</button><button class="close-btn" onclick="window.close()">❌ ${t.closePreview}</button></div>
@@ -910,6 +974,7 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+// FIXED: Edit invoice - properly sets up cancel button
 async function editInvoice(invoiceId) {
     const t = translations[currentLanguage];
     const invoice = await getInvoiceById(invoiceId);
@@ -931,7 +996,7 @@ async function editInvoice(invoiceId) {
         const newRow = document.createElement('tr');
         newRow.id = `itemRow_${rowId}`;
         newRow.innerHTML = `
-            <td class="border p-1"><input type="text" class="item-name w-full p-2 border rounded-lg" value="${escapeHtml(item.name)}" style="font-size:16px"></td>
+            <td class="border p-1"><input type="text" class="item-name w-full p-2 border rounded-lg" value="${escapeHtml(item.name)}" style="font-size:16px" id="itemName_${rowId}"></td>
             <td class="border p-1"><input type="number" class="item-qty w-full p-2 border rounded-lg" value="${item.qty}" step="0.5" min="0" style="font-size:16px;text-align:center"></td>
             <td class="border p-1"><input type="number" class="item-price w-full p-2 border rounded-lg" value="${item.price}" step="1" min="0" style="font-size:16px;text-align:center"></td>
             <td class="border p-1 text-center"><span class="item-total font-bold">${(item.qty * item.price).toFixed(2)}</span></td>
@@ -952,6 +1017,7 @@ async function editInvoice(invoiceId) {
         saveBtn.classList.add('bg-orange-500', 'hover:bg-orange-600');
     }
     
+    // Create or show cancel button
     let cancelBtn = document.getElementById('cancelEditBtn');
     if (!cancelBtn) {
         const container = document.getElementById('saveInvoiceBtn')?.parentElement;
@@ -961,8 +1027,7 @@ async function editInvoice(invoiceId) {
             cancelBtn.className = 'bg-gray-500 text-white px-4 py-3 rounded-xl font-bold text-sm md:text-base mt-2 w-full transition active:scale-98 flex items-center justify-center gap-2';
             cancelBtn.innerHTML = `<i class="fas fa-times"></i> <span>${t.cancelEdit}</span>`;
             cancelBtn.onclick = () => {
-                editingInvoiceId = null;
-                resetForNewBill();
+                cancelEdit();
             };
             container.appendChild(cancelBtn);
         }
@@ -997,7 +1062,6 @@ async function deleteInvoice(invoiceId) {
     }
 }
 
-// Date filter functions
 function filterByDate() {
     const dateInput = document.getElementById('filterDate');
     currentFilterDate = dateInput.value;
@@ -1016,7 +1080,6 @@ async function loadInvoices() {
     const countSpan = document.getElementById('invoiceCount');
     const t = translations[currentLanguage];
     
-    // Apply date filter
     if (currentFilterDate) {
         invoices = invoices.filter(inv => inv.date === currentFilterDate);
     }
@@ -1165,6 +1228,7 @@ window.showPaymentQR = showPaymentQR;
 window.closePaymentQRModal = closePaymentQRModal;
 window.removeQRCode = removeQRCode;
 window.resetForNewBill = resetForNewBill;
+window.cancelEdit = cancelEdit;
 window.addItemRow = addItemRow;
 window.removeItemRow = removeItemRow;
 window.saveInvoice = saveInvoice;
