@@ -1,19 +1,16 @@
 {
   "name": "Hosur Invoice Bill",
   "short_name": "Hosur Bill",
-  "description": "Free offline-first invoice generator for Hosur businesses - Tamil & English support",
+  "description": "Free offline-first invoice generator for Hosur businesses",
   "start_url": "/",
   "display": "standalone",
-  "theme_color": "#1e3a8a",
+  "theme_color": "#0f172a",
   "background_color": "#ffffff",
-  "orientation": "portrait",
-  "categories": ["business", "finance", "productivity"],
   "icons": [
     {
       "src": "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     },
     {
       "src": "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
