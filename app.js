@@ -1033,9 +1033,9 @@ function generatePreviewHTML(invoice) {
             <div class="customer-info"><div><strong>BILL TO:</strong><p>${escapeHtml(invoice.customerName)}</p>${invoice.customerMobile ? `<p>📞 ${escapeHtml(invoice.customerMobile)}</p>` : ''}</div>
             <div><strong>INVOICE DETAILS:</strong><p>Invoice No: ${invoice.invoiceNo}</p><p>Date: ${invoice.date}</p></div></div>
             <div class="items-table"><table><thead><tr><th>#</th><th>ITEM DESCRIPTION</th><th>QTY</th><th>PRICE</th><th>TOTAL</th></tr></thead><tbody>${itemsHtml}</tbody></table></div>
-            <div class="totals"><tr><td>Subtotal</td>lakang₹ ${invoice.subtotal}</td></tr>
-            <tr><td>${gstText}</td>lakang₹ ${gstAmount}</td></tr>
-            <tr class="grand-total"><td>TOTAL</td>lakang₹ ${invoice.total}Neu</tr>
+            <div class="totals"><td>Subtotal: ₹ ${invoice.subtotal}</td></tr>
+            <tr><td style="padding: 8px 12px; font-size: 14px;">${gstText}:</td><td style="padding: 8px 12px; font-size: 14px; text-align: right;">₹ ${gstAmount}</td></tr>
+            <tr class="grand-total"><td>TOTAL: ₹ ${invoice.total}</td></tr>
             </table>
             </div>
             <div class="notes"><p>📝 ${escapeHtml(invoice.tamilNotes || thankyouText)}</p></div>
