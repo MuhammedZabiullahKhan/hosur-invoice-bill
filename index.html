@@ -69,6 +69,18 @@
         }
         .btn-primary:active { transform: scale(0.98); }
         
+        /* Install App Button */
+        .install-btn {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            animation: pulse 1.5s infinite;
+        }
+        .install-btn:hover { transform: scale(1.02); }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+        
         .modal {
             display: none;
             position: fixed;
@@ -211,6 +223,27 @@
             transform: translateX(26px);
         }
         
+        /* Auto-complete dropdown improvements for mobile */
+        .auto-suggest {
+            position: absolute;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+        .auto-suggest-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 16px;
+        }
+        .auto-suggest-item:active {
+            background-color: #f0f0f0;
+        }
+        
         /* Mobile Responsive */
         @media (max-width: 640px) {
             body { padding: 8px; }
@@ -310,7 +343,8 @@
                 <h3 class="font-semibold mb-2" id="aboutTitle">ℹ️ About</h3>
                 <p class="text-sm mb-2" id="aboutText">Hosur Invoice Bill - Free invoice generator</p>
                 <p class="text-sm"><i class="fas fa-envelope"></i> <a href="mailto:0gbtechintel@gmail.com" class="text-blue-500">0gbtechintel@gmail.com</a></p>
-                <p class="text-xs text-gray-500 mt-2">Version 2.0 | Created by Shri Muhammed Zabiullah Khan</p>
+                <p class="text-sm"><i class="fas fa-phone"></i> <a href="tel:9087119440" class="text-blue-500">9087119440</a></p>
+                <p class="text-xs text-gray-500 mt-2">Version 2.0 | Created by Shri Muhammed Zabiullah Khan | PrimeSys Solutions</p>
             </div>
         </div>
     </div>
@@ -351,7 +385,7 @@
                             <p class="text-[10px] md:text-xs text-gray-500" id="subtitleText">Hosur Invoice Bill</p>
                         </div>
                     </div>
-                    <p class="text-[9px] md:text-xs text-gray-400 mt-0.5" id="createdByText">by Shri Muhammed Zabiullah Khan</p>
+                    <p class="text-[9px] md:text-xs text-gray-400 mt-0.5" id="createdByText">by Shri Muhammed Zabiullah Khan | PrimeSys Solutions</p>
                 </div>
                 
                 <!-- Digital Clock -->
@@ -369,6 +403,9 @@
                     </button>
                     <button id="langBtn" onclick="toggleLanguage()" class="bg-blue-500 hover:bg-blue-600 text-white px-3 md:px-4 py-1.5 md:py-2 rounded-xl font-semibold shadow-md transition active:scale-95 flex items-center gap-1 md:gap-2 text-sm md:text-base">
                         <i class="fas fa-language"></i> தமிழ்
+                    </button>
+                    <button id="installAppBtn" onclick="promptInstallApp()" class="install-btn text-white px-3 md:px-4 py-1.5 md:py-2 rounded-xl font-semibold shadow-md transition active:scale-95 flex items-center gap-1 md:gap-2 text-sm md:text-base">
+                        <i class="fas fa-download"></i> <span id="installBtnText">Install App</span>
                     </button>
                     <button id="settingsBtn" onclick="openSettings()" class="bg-gray-500 hover:bg-gray-600 text-white px-3 md:px-4 py-1.5 md:py-2 rounded-xl font-semibold shadow-md transition active:scale-95 flex items-center gap-1 md:gap-2 text-sm md:text-base">
                         <i class="fas fa-cog"></i> Settings
@@ -500,7 +537,8 @@
         
         <!-- Footer -->
         <div class="text-center text-white text-[9px] md:text-xs py-3 md:py-4 opacity-75 no-print animate-fadeInUp">
-            <p>© 2026 Hosur Invoice Bill | <a href="mailto:0gbtechintel@gmail.com" class="text-white underline">0gbtechintel@gmail.com</a> | Hosur, Krishnagiri District, TN</p>
+            <p>© 2026 Hosur Invoice Bill | <a href="mailto:0gbtechintel@gmail.com" class="text-white underline">0gbtechintel@gmail.com</a> | <a href="tel:9087119440" class="text-white underline">9087119440</a></p>
+            <p>Developed by Shri Muhammed Zabiullah Khan | PrimeSys Solutions</p>
         </div>
     </div>
 
@@ -525,6 +563,97 @@
         }
         updateClock();
         setInterval(updateClock, 1000);
+        
+        // PWA Install Prompt - avoid duplicate installs
+        let deferredPrompt = null;
+        let isAppInstalled = false;
+        
+        // Check if app is already installed
+        window.addEventListener('load', () => {
+            // Check if running in standalone mode (already installed)
+            if (window.matchMedia('(display-mode: standalone)').matches || 
+                window.navigator.standalone === true) {
+                isAppInstalled = true;
+                const installBtn = document.getElementById('installAppBtn');
+                if (installBtn) installBtn.style.display = 'none';
+            }
+        });
+        
+        // Listen for beforeinstallprompt event
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            const installBtn = document.getElementById('installAppBtn');
+            if (installBtn && !isAppInstalled) installBtn.style.display = 'flex';
+        });
+        
+        // Handle app installed event
+        window.addEventListener('appinstalled', () => {
+            isAppInstalled = true;
+            deferredPrompt = null;
+            const installBtn = document.getElementById('installAppBtn');
+            if (installBtn) installBtn.style.display = 'none';
+            showToast('✅ App installed successfully!');
+        });
+        
+        function promptInstallApp() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted install');
+                    } else {
+                        console.log('User dismissed install');
+                    }
+                    deferredPrompt = null;
+                });
+            } else {
+                showToast('Install prompt not available. You can manually add to home screen from browser menu.');
+            }
+        }
+        
+        // Play sound function
+        function playSound(type) {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                if (type === 'save') {
+                    oscillator.frequency.value = 523.25; // C5
+                    gainNode.gain.value = 0.3;
+                    oscillator.start();
+                    gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.5);
+                    oscillator.stop(audioContext.currentTime + 0.5);
+                } else if (type === 'new') {
+                    oscillator.frequency.value = 440; // A4
+                    gainNode.gain.value = 0.3;
+                    oscillator.start();
+                    gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.3);
+                    oscillator.stop(audioContext.currentTime + 0.3);
+                }
+                setTimeout(() => audioContext.close(), 600);
+            } catch(e) {
+                console.log('Audio not supported');
+            }
+        }
+        
+        // Override showToast to include sound
+        const originalShowToast = showToast;
+        window.showToast = function(message) {
+            if (message.includes('Invoice saved') || message.includes('சேமிக்கப்பட்டது')) {
+                playSound('save');
+            } else if (message.includes('Ready for new bill') || message.includes('புதிய பில்லுக்கு தயார்')) {
+                playSound('new');
+            }
+            originalShowToast(message);
+        };
+        
+        // Make install function global
+        window.promptInstallApp = promptInstallApp;
     </script>
 </body>
 </html>
